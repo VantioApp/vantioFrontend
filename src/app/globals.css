@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-serif: "Merriweather", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+}

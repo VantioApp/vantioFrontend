@@ -1,0 +1,48 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+interface RequestOptions {
+  method?: string;
+  body?: unknown;
+  token?: string | null;
+}
+
+async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  const { method = 'GET', body, token } = options;
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Error en la solicitud' }));
+    throw new Error(error.message || `HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export const api = {
+  get: <T>(endpoint: string, token?: string | null) =>
+    request<T>(endpoint, { token }),
+
+  post: <T>(endpoint: string, body?: unknown, token?: string | null) =>
+    request<T>(endpoint, { method: 'POST', body, token }),
+
+  put: <T>(endpoint: string, body?: unknown, token?: string | null) =>
+    request<T>(endpoint, { method: 'PUT', body, token }),
+
+  delete: <T>(endpoint: string, token?: string | null) =>
+    request<T>(endpoint, { method: 'DELETE', token }),
+};
+
+export default api;
