@@ -110,23 +110,29 @@ vantioFrontend/
 1. **Registro**: Usuario completa formulario en `/register`
 2. **Login**: Usuario ingresa credenciales en `/login`
 3. **Token JWT**: Backend devuelve `{ user, access_token }`
-4. **Persistencia**: Token se guarda en Zustand store + localStorage
-5. **Requests autenticados**: Header `Authorization: Bearer <token>`
-6. **Protección de rutas**: Componentes verifican `isAuthenticated` y redirigen a `/login` si es necesario
-7. **Logout**: Limpiar store y redirigir a `/`
+4. **Redirección por rol**:
+   - Si `user.role === 'admin'` → `/admin`
+   - Si no → `/dashboard`
+5. **Persistencia**: Token se guarda en Zustand store + localStorage
+6. **Requests autenticados**: Header `Authorization: Bearer <token>`
+7. **Protección de rutas**:
+   - `/admin/*`: Solo usuarios con rol `admin`. Estudiantes son redirigidos a `/dashboard`.
+   - `/dashboard`: Requiere autenticación.
+8. **Logout**: Limpiar store y redirigir a `/`
 
 ---
 
 ## Flujo de Quiz
 
 1. **Inicio**: Usuario hace clic en "Iniciar Nueva Prueba" en `/dashboard`
-2. **Generación**: Frontend llama `POST /api/quiz/generate` con `subjectId`
-3. **Backend**: Crea `TestSession` y retorna preguntas sin respuestas correctas
-4. **Interfaz**: Usuario responde preguntas una por una en `/quiz/[testId]`
-5. **Timer**: Countdown de 30 minutos, se actualiza cada segundo
-6. **Envío**: Al finalizar, frontend llama `POST /api/quiz/[testId]/submit`
-7. **Resultados**: Frontend muestra resultados en `/quiz/[testId]/results`
-8. **Historial**: Se actualiza en `/dashboard`
+2. **Selección de área**: Modal para elegir entre "Derecho Penal" o "Derecho Privado"
+3. **Generación**: Frontend llama `POST /api/quiz/generate` con `{ area: string }`
+4. **Backend**: Busca todas las materias del área, selecciona 40 preguntas aleatorias y crea `TestSession`
+5. **Interfaz**: Usuario responde preguntas una por una en `/quiz/[testId]`
+6. **Timer**: Countdown de 30 minutos, se actualiza cada segundo
+7. **Envío**: Al finalizar, frontend llama `POST /api/quiz/[testId]/submit`
+8. **Resultados**: Frontend muestra resultados en `/quiz/[testId]/results`
+9. **Historial**: Se actualiza en `/dashboard`
 
 ---
 
@@ -136,7 +142,7 @@ vantioFrontend/
 
 ```typescript
 // src/lib/api.ts
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
 
 export const api = {
   get: <T>(endpoint: string, token?: string | null) => request<T>(endpoint, { token }),
@@ -147,15 +153,17 @@ export const api = {
 
 ### Endpoints consumidos
 
-| Método | Endpoint | Descripción |
-|---|---|---|
-| POST | `/auth/register` | Registrar usuario |
-| POST | `/auth/login` | Iniciar sesión |
-| GET | `/auth/profile` | Obtener perfil |
-| POST | `/quiz/generate` | Generar quiz |
-| POST | `/quiz/:testId/submit` | Enviar respuestas |
-| GET | `/quiz/:testId/results` | Resultados |
-| GET | `/quiz/history/:userId` | Historial |
+| Método | Endpoint | Auth | Descripción |
+|---|---|---|---|
+| POST | `/auth/register` | No | Registrar usuario |
+| POST | `/auth/login` | No | Iniciar sesión |
+| GET | `/auth/profile` | JWT | Obtener perfil |
+| POST | `/quiz/generate` | JWT | Generar quiz por área |
+| POST | `/quiz/:testId/submit` | JWT | Enviar respuestas |
+| GET | `/quiz/:testId/results` | JWT | Resultados |
+| GET | `/quiz/history/:userId` | JWT | Historial |
+| GET | `/admin/stats?days=7` | Admin | Métricas de administración |
+| GET | `/admin/users?search=&page=&limit=` | Admin | Listado de usuarios |
 
 ---
 
@@ -163,7 +171,7 @@ export const api = {
 
 | Variable | Descripción | Default |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | URL de la API de Vantio Backend | `http://localhost:3001/api` |
+| `NEXT_PUBLIC_API_URL` | URL de la API de Vantio Backend | `http://localhost:4001/api` |
 
 ---
 
@@ -173,10 +181,10 @@ export const api = {
 
 ```bash
 # Instalar dependencias
-npm install
+pnpm install
 
 # Iniciar servidor de desarrollo
-npm run dev
+pnpm run dev
 
 # Abrir en navegador
 open http://localhost:3000
@@ -186,17 +194,17 @@ open http://localhost:3000
 
 ```bash
 # Compilar para producción
-npm run build
+pnpm run build
 
 # Iniciar servidor de producción
-npm run start
+pnpm run start
 ```
 
 ### Linting
 
 ```bash
 # Ejecutar ESLint
-npm run lint
+pnpm run lint
 ```
 
 ---
@@ -276,7 +284,7 @@ Ver `DESIGN.md` para el sistema de diseño completo.
 ## Dependencias del Backend
 
 El frontend consume la API de `vantioBackend`. Para desarrollo local:
-- Backend corre en `http://localhost:3001`
+- Backend corre en `http://localhost:4001`
 - Frontend corre en `http://localhost:3000`
 - CORS está configurado en el backend para permitir ambos orígenes
 

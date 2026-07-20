@@ -12,7 +12,7 @@ interface AuthStore {
 
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loadProfile: () => Promise<void>;
   clearError: () => void;
 }
@@ -70,24 +70,34 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      logout: () => {
-        set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          error: null,
-        });
+      logout: async () => {
+        try {
+          await api.post('/auth/logout');
+        } catch (error) {
+          console.error('Error durante logout:', error);
+        } finally {
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            error: null,
+          });
+        }
       },
 
       loadProfile: async () => {
         const { token } = get();
+        console.log('[loadProfile] Token:', token ? 'EXISTS' : 'NULL');
         if (!token) return;
 
         try {
+          console.log('[loadProfile] Calling /auth/profile...');
           const user = await api.get<User>('/auth/profile', token);
+          console.log('[loadProfile] Profile loaded:', user.name);
           set({ user, isAuthenticated: true });
         } catch (error) {
-          console.error('Failed to load profile:', error);
+          console.error('[loadProfile] Failed:', error);
+          console.log('[loadProfile] Calling logout...');
           get().logout();
         }
       },

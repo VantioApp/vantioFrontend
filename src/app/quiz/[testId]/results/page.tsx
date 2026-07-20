@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { 
   CheckCircle, AlertTriangle, ArrowRight, Gavel, RefreshCw, 
-  ChevronRight, BookOpen, Scale, Award, ShieldCheck
+  ChevronRight, BookOpen, Award, ShieldCheck
 } from 'lucide-react';
+import { Logo } from '@/components/ui/logo';
 import { useQuizStore } from '@/stores/quizStore';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -35,9 +36,8 @@ export default function QuizResultsPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-800 antialiased justify-between">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Scale className="w-7 h-7 text-slate-900" />
-            <span className="font-serif text-xl font-bold text-slate-900 tracking-tight">Vantio</span>
+          <Link href="/dashboard" className="flex items-center">
+            <Logo variant="full" theme="light" height={32} />
           </Link>
 
           <div className="bg-slate-900 text-white rounded-lg px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1 border border-slate-800 shadow-sm">
@@ -149,7 +149,7 @@ export default function QuizResultsPage() {
                   <div className="flex flex-col gap-2 pt-2">
                     {question.options.map((option, oIdx) => {
                       const letter = optionLetters[oIdx];
-                      const isCorrectOption = option.label === question.correctAnswer;
+                      const isCorrectOption = question.correctAnswers.includes(option.label);
                       const isStudentChoice = oIdx === studentAnswerIdx;
 
                       let rowStyle = 'bg-slate-50 border-slate-200 text-slate-700';

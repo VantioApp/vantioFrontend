@@ -59,14 +59,14 @@ git clone https://github.com/VantioApp/vantioFrontend.git
 cd vantioFrontend
 
 # Instalar dependencias
-npm install
+pnpm install
 
 # Configurar variables de entorno
 cp .env.example .env.local
 # Editar .env.local con la URL de tu API
 
 # Iniciar servidor de desarrollo
-npm run dev
+pnpm run dev
 ```
 
 La aplicación estará disponible en `http://localhost:3000`
@@ -77,7 +77,7 @@ La aplicación estará disponible en `http://localhost:3000`
 
 | Variable | Descripción | Default |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | URL de la API de Vantio Backend | `http://localhost:3001/api` |
+| `NEXT_PUBLIC_API_URL` | URL de la API de Vantio Backend | `http://localhost:4001/api` |
 
 ---
 
@@ -159,10 +159,10 @@ Ver `DESIGN.md` para el sistema de diseño completo.
 
 | Comando | Descripción |
 |---|---|
-| `npm run dev` | Iniciar servidor de desarrollo |
-| `npm run build` | Compilar para producción |
-| `npm run start` | Iniciar servidor de producción |
-| `npm run lint` | Ejecutar ESLint |
+| `pnpm run dev` | Iniciar servidor de desarrollo |
+| `pnpm run build` | Compilar para producción |
+| `pnpm run start` | Iniciar servidor de producción |
+| `pnpm run lint` | Ejecutar ESLint |
 
 ---
 

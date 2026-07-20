@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { Scale, Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Logo } from '@/components/ui/logo';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function LoginPage() {
@@ -23,7 +24,12 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push('/dashboard');
+      const { user } = useAuthStore.getState();
+      if (user?.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       console.error('Login failed:', err);
     }
@@ -36,9 +42,8 @@ export default function LoginPage() {
       
       {/* Mini Header */}
       <header className="bg-white border-b border-slate-200 h-20 flex items-center justify-between px-6 md:px-12 w-full">
-        <Link href="/" className="flex items-center gap-2">
-          <Scale className="w-7 h-7 text-amber-600" />
-          <span className="font-serif text-xl font-bold text-slate-900 tracking-tight">Vantio</span>
+        <Link href="/" className="flex items-center">
+          <Logo variant="full" theme="light" height={32} />
         </Link>
         <Link 
           href="/"
@@ -58,8 +63,8 @@ export default function LoginPage() {
         >
           {/* Logo Heading */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-slate-900 text-amber-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Scale className="w-8 h-8" />
+            <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm overflow-hidden">
+              <Logo variant="isotype" theme="dark" height={40} />
             </div>
             <h1 className="font-serif text-3xl font-bold text-slate-900">Bienvenido de nuevo</h1>
             <p className="text-sm text-slate-500 mt-1">Ingresa tus credenciales para continuar</p>

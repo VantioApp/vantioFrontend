@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Merriweather, Inter } from "next/font/google";
+import { AuthHydrator } from "@/components/AuthHydrator";
 import "./globals.css";
 
 const merriweather = Merriweather({
@@ -18,9 +19,79 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Vantio - Plataforma de Preparación Jurídica",
-  description: "Plataforma educativa para profesionales de leyes y contabilidad en Colombia. Preparación rigurosa para exámenes preparatorios de Derecho Penal y Civil.",
-  keywords: ["derecho", "quiz", "preparación", "exámenes", "Colombia", "penal", "civil"],
+  metadataBase: new URL('https://vantio.xchecho.com'),
+  title: {
+    default: 'Vantio - Plataforma de Preparación Jurídica',
+    template: '%s | Vantio',
+  },
+  description:
+    'Plataforma educativa para profesionales de leyes y contabilidad en Colombia. Simulacros aleatorios, seguimiento de progreso y métricas de rendimiento para exámenes preparatorios de Derecho Penal y Civil.',
+  keywords: [
+    'derecho',
+    'quiz',
+    'preparación',
+    'exámenes',
+    'Colombia',
+    'penal',
+    'civil',
+    'simulacros',
+    'preparatorio',
+    'educación jurídica',
+    'abogados',
+    'contabilidad',
+  ],
+  authors: [{ name: 'Vantio' }],
+  creator: 'Vantio',
+  publisher: 'Vantio',
+  applicationName: 'Vantio',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: 'Vantio - Plataforma de Preparación Jurídica',
+    description:
+      'Plataforma educativa para profesionales de leyes y contabilidad en Colombia. Simulacros aleatorios, seguimiento de progreso y métricas de rendimiento.',
+    url: 'https://vantio.xchecho.com',
+    siteName: 'Vantio',
+    locale: 'es_CO',
+    type: 'website',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'Vantio - Plataforma de Preparación Jurídica',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vantio - Plataforma de Preparación Jurídica',
+    description:
+      'Plataforma educativa para profesionales de leyes y contabilidad en Colombia. Simulacros aleatorios, seguimiento de progreso y métricas de rendimiento.',
+    images: ['/opengraph-image'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: '/',
+  },
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-icon',
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -30,7 +101,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${merriweather.variable} ${inter.variable}`}>
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <AuthHydrator />
+        {children}
+      </body>
     </html>
   );
 }

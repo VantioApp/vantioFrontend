@@ -4,7 +4,7 @@ import api from '@/lib/api';
 import { useAuthStore } from './authStore';
 
 interface QuizStore extends QuizState {
-  startQuiz: (subjectId: string, totalQuestions?: number) => Promise<void>;
+  startQuiz: (area: string, totalQuestions?: number) => Promise<void>;
   selectOption: (optionIndex: number) => void;
   nextQuestion: () => void;
   finishQuiz: () => void;
@@ -27,7 +27,7 @@ const initialQuizState: QuizState = {
 export const useQuizStore = create<QuizStore>((set, get) => ({
   ...initialQuizState,
 
-  startQuiz: async (subjectId, totalQuestions = 40) => {
+  startQuiz: async (area, totalQuestions = 40) => {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error('No autenticado');
 
@@ -36,7 +36,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
         testId: string;
         totalQuestions: number;
         questions: Question[];
-      }>('/quiz/generate', { subjectId, totalQuestions }, token);
+      }>('/quiz/generate', { area, totalQuestions }, token);
 
       set({
         testId: response.testId,
@@ -66,7 +66,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
 
     const currentQuestion = questions[currentQuestionIndex];
     const selectedLabel = currentQuestion.options[selectedOptionIndex].label;
-    const isCorrect = selectedLabel === currentQuestion.correctAnswer;
+    const isCorrect = currentQuestion.correctAnswers.includes(selectedLabel);
     const nextAnswers = [
       ...answers,
       {
@@ -104,7 +104,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
 
     try {
       const submitAnswers = answers.map((a) => ({
-        testQuestionId: questions[a.questionId as unknown as number]?.id || a.questionId,
+        testQuestionId: a.questionId,
         selectedAnswer: questions.find((q) => q.id === a.questionId)?.options[a.selectedIndex]?.label || '',
       }));
 

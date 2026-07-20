@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Scale, Timer, X, ArrowRight, Gavel } from 'lucide-react';
+import { Timer, X, ArrowRight, Gavel } from 'lucide-react';
+import { Logo } from '@/components/ui/logo';
 import { useQuizStore } from '@/stores/quizStore';
 import { useAuthStore } from '@/stores/authStore';
 import { formatTime } from '@/lib/utils';
@@ -65,7 +66,7 @@ export default function QuizPage() {
 
         <div className="max-w-4xl mx-auto px-6 h-16 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Scale className="w-6 h-6 text-slate-900" />
+            <Logo variant="isotype" theme="light" height={28} />
             <span className="font-serif text-lg font-bold text-slate-900 tracking-tight">Vantio</span>
             <span className="hidden md:inline-block text-xs font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wider">
               Simulacro Preparatorio

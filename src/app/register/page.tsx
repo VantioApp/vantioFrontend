@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { Scale, Mail, Lock, User, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Logo } from '@/components/ui/logo';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function RegisterPage() {
@@ -53,9 +54,8 @@ export default function RegisterPage() {
       <div className="absolute top-0 right-0 w-1/3 h-full opacity-5 pointer-events-none bg-gradient-to-bl from-amber-500 to-transparent" />
       
       <header className="bg-white border-b border-slate-200 h-20 flex items-center justify-between px-6 md:px-12 w-full">
-        <Link href="/" className="flex items-center gap-2">
-          <Scale className="w-7 h-7 text-amber-600" />
-          <span className="font-serif text-xl font-bold text-slate-900 tracking-tight">Vantio</span>
+        <Link href="/" className="flex items-center">
+          <Logo variant="full" theme="light" height={32} />
         </Link>
         <Link 
           href="/"

@@ -2,196 +2,213 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { 
-  Scale, Users, FileText, BarChart2, Settings, HelpCircle, LogOut, PlusCircle,
-  TrendingUp, Calendar, CheckCircle2, AlertCircle, Search, Mail, ShieldCheck
-} from 'lucide-react';
+import Image from 'next/image';
+import { Users, FileText, TrendingUp, BookOpen, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuthHydration } from '@/hooks/useAuthHydration';
+import api from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 
-export default function AdminPage() {
+interface AdminStats {
+  totalUsers: number;
+  totalTests: number;
+  averageScore: number;
+  recentTestTakers: number;
+  testsByArea: { area: string; totalTests: number; averageScore: number }[];
+  availableAreas: { area: string; subjectCount: number; totalQuestions: number }[];
+}
+
+export default function AdminDashboardPage() {
   const router = useRouter();
-  const { user, logout, isAuthenticated } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'usuarios' | 'pruebas'>('usuarios');
-  const [searchTerm, setSearchTerm] = useState('');
+  const { user, token, isAuthenticated } = useAuthStore();
+  const isHydrated = useAuthHydration();
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [days, setDays] = useState(7);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== 'admin') {
-      router.push('/login');
+    if (!isHydrated) {
+      console.log('[Admin] Waiting for hydration...');
+      return;
     }
-  }, [isAuthenticated, user, router]);
+    
+    console.log('[Admin] Hydrated. isAuthenticated:', isAuthenticated, 'user.role:', user?.role);
+    
+    // El proxy ya protege contra usuarios no autenticados
+    // Solo verificamos el rol aquí
+    if (user?.role !== 'admin') {
+      console.log('[Admin] User is not admin, redirecting to dashboard');
+      router.push('/dashboard');
+    }
+  }, [isHydrated, user, router]);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    const loadStats = async () => {
+      try {
+        setLoading(true);
+        const data = await api.get<AdminStats>(`/admin/stats?days=${days}`, token);
+        setStats(data);
+      } catch (err) {
+        console.error('Failed to load stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, [isAuthenticated, user, days]);
 
   if (!user) return null;
 
+  const memberSince = user.createdAt ? formatDate(user.createdAt) : 'N/A';
+
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800 antialiased">
-      <aside className="hidden md:flex flex-col w-64 bg-slate-900 text-slate-300 border-r border-slate-800 shrink-0 p-6">
-        <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-800">
-          <div className="w-10 h-10 bg-amber-500 text-slate-900 rounded-lg flex items-center justify-center font-bold shadow-sm">
-            <Scale className="w-6 h-6" />
+    <>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="font-serif text-3xl md:text-4xl text-slate-900 font-bold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-1">Welcome back to your academic progress.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col items-center text-center lg:col-span-1">
+          <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-slate-50 shadow-sm bg-slate-100 flex items-center justify-center">
+            {user.avatarUrl ? (
+              <Image src={user.avatarUrl} alt={user.name} width={96} height={96} className="w-full h-full object-cover" />
+            ) : (
+              <Users className="w-12 h-12 text-slate-400" />
+            )}
           </div>
-          <div>
-            <h1 className="font-serif text-lg font-bold text-white tracking-tight leading-none">Admin Portal</h1>
-            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Vantio Suite</p>
-          </div>
+          <h2 className="font-serif text-xl font-bold text-slate-900">{user.name}</h2>
+          <p className="text-sm text-slate-500 mt-1 mb-6">Member since: {memberSince}</p>
+          <button className="w-full border border-slate-300 text-slate-900 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors">
+            Editar Perfil
+          </button>
         </div>
 
-        <nav className="flex-1 flex flex-col gap-1">
-          <button 
-            onClick={() => setActiveTab('usuarios')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === 'usuarios' ? 'bg-slate-800 text-white' : 'hover:bg-slate-800/50 hover:text-white'
-            }`}
-          >
-            <Users className={`w-4 h-4 ${activeTab === 'usuarios' ? 'text-amber-400' : 'text-slate-400'}`} />
-            <span>Usuarios</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('pruebas')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === 'pruebas' ? 'bg-slate-800 text-white' : 'hover:bg-slate-800/50 hover:text-white'
-            }`}
-          >
-            <FileText className={`w-4 h-4 ${activeTab === 'pruebas' ? 'text-amber-400' : 'text-slate-400'}`} />
-            <span>Historial de Pruebas</span>
-          </button>
-
-          <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold hover:bg-slate-800/50 hover:text-white transition-colors">
-            <BarChart2 className="w-4 h-4 text-slate-400" />
-            <span>Analíticas</span>
-          </a>
-
-          <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold hover:bg-slate-800/50 hover:text-white transition-colors">
-            <Settings className="w-4 h-4 text-slate-400" />
-            <span>Configuración</span>
-          </a>
-        </nav>
-
-        <div className="pt-6 border-t border-slate-800 flex flex-col gap-4">
-          <button className="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-semibold py-2.5 px-4 rounded-lg text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm">
-            <PlusCircle className="w-4 h-4" />
-            Crear Nueva Prueba
-          </button>
-
-          <div className="flex flex-col gap-0.5">
-            <a href="#" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium hover:text-white transition-colors">
-              <HelpCircle className="w-4 h-4 text-slate-500" />
-              Centro de Ayuda
-            </a>
-            <button 
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors text-left"
-            >
-              <LogOut className="w-4 h-4 text-rose-400/80" />
-              Cerrar Sesión
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className="bg-amber-600 text-white rounded-xl p-8 flex flex-col sm:flex-row items-center justify-between shadow-sm relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white to-transparent pointer-events-none"></div>
+            <div className="z-10 text-center sm:text-left mb-4 sm:mb-0">
+              <h3 className="font-serif text-2xl md:text-3xl font-bold">Preparación Intensiva</h3>
+              <p className="text-sm opacity-90 mt-2 max-w-md">Continúa tu preparación para el examen final con una nueva prueba de simulación completa.</p>
+            </div>
+            <button className="z-10 bg-white text-amber-700 px-6 py-3 rounded-lg text-sm font-bold hover:bg-opacity-95 shadow-sm transition-all hover:scale-105 active:scale-95 whitespace-nowrap">
+              Iniciar Nueva Prueba
             </button>
           </div>
-        </div>
-      </aside>
 
-      <main className="flex-grow flex flex-col min-w-0 overflow-y-auto">
-        <header className="md:hidden bg-white border-b border-slate-200 h-16 px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Scale className="w-6 h-6 text-amber-600" />
-            <span className="font-serif font-bold text-slate-900 text-lg">Vantio Admin</span>
-          </div>
-          <button onClick={handleLogout} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
-            <LogOut className="w-5 h-5" />
-          </button>
-        </header>
-
-        <div className="p-6 md:p-10 max-w-6xl w-full mx-auto flex flex-col gap-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="font-serif text-3xl md:text-4xl text-slate-900 font-bold tracking-tight">Panel de Administración</h1>
-              <p className="text-sm text-slate-500 mt-1">Supervisión de métricas, estudiantes y pruebas completadas.</p>
-            </div>
-            
-            <div className="bg-slate-900 text-white rounded-lg px-4 py-2 text-xs font-semibold flex items-center gap-2 border border-slate-800 shadow-sm">
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <span>Sesión Iniciada como Administrador</span>
-            </div>
-          </div>
-
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 bg-slate-100 text-slate-900 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Estudiantes Registrados</p>
-                <p className="text-2xl font-bold text-slate-950 mt-0.5">1,248</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Users</p>
+                <p className="text-2xl font-bold text-slate-950 mt-0.5">{stats?.totalUsers || 0}</p>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 bg-slate-100 text-slate-900 rounded-lg flex items-center justify-center">
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Historial de Simulacros</p>
-                <p className="text-2xl font-bold text-slate-950 mt-0.5">3,890</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Exams</p>
+                <p className="text-2xl font-bold text-slate-950 mt-0.5">{stats?.totalTests || 0}</p>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-lg flex items-center justify-center border border-amber-200">
                 <TrendingUp className="w-6 h-6 text-amber-600" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Puntaje Promedio General</p>
-                <p className="text-2xl font-bold text-slate-950 mt-0.5">82.4%</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Average Score</p>
+                <p className="text-2xl font-bold text-slate-950 mt-0.5">{stats?.averageScore || 0}%</p>
               </div>
-            </div>
-          </section>
-
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="border-b border-slate-200 px-6 py-4 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
-              <div className="flex border border-slate-200 bg-white rounded-lg p-0.5 self-start">
-                <button
-                  onClick={() => { setActiveTab('usuarios'); setSearchTerm(''); }}
-                  className={`px-4 py-2 rounded-md text-xs font-bold transition-colors ${
-                    activeTab === 'usuarios' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Estudiantes
-                </button>
-                <button
-                  onClick={() => { setActiveTab('pruebas'); setSearchTerm(''); }}
-                  className={`px-4 py-2 rounded-md text-xs font-bold transition-colors ${
-                    activeTab === 'pruebas' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Pruebas Realizadas
-                </button>
-              </div>
-
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre o correo..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full sm:w-64 pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-slate-900 transition-colors"
-                />
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <p className="text-center py-8 text-slate-400 text-sm">
-                {activeTab === 'usuarios' ? 'Lista de estudiantes aparecerá aquí' : 'Historial de pruebas aparecerá aquí'}
-              </p>
             </div>
           </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
+              <h3 className="font-serif text-xl font-bold text-slate-900">Mi Historial de Pruebas</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDays(7)}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                    days === 7 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  7 días
+                </button>
+                <button
+                  onClick={() => setDays(30)}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                    days === 30 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  30 días
+                </button>
+              </div>
+            </div>
+
+            {loading ? (
+              <p className="text-center py-8 text-slate-400 text-sm">Cargando estadísticas...</p>
+            ) : stats ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-slate-600" />
+                    <span className="text-sm font-medium text-slate-700">Personas que han realizado pruebas</span>
+                  </div>
+                  <span className="text-lg font-bold text-slate-900">{stats.recentTestTakers}</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {stats.availableAreas.map((area) => (
+                    <div key={area.area} className="p-4 border border-slate-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <BookOpen className="w-4 h-4 text-amber-600" />
+                        <span className="text-sm font-semibold text-slate-900">{area.area}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-500">
+                        <span>{area.subjectCount} materias</span>
+                        <span>{area.totalQuestions} preguntas</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {stats.testsByArea.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Pruebas por área</h4>
+                    <div className="space-y-2">
+                      {stats.testsByArea.map((area) => (
+                        <div key={area.area} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                          <span className="text-sm text-slate-700">{area.area}</span>
+                          <div className="flex items-center gap-4">
+                            <span className="text-xs text-slate-500">{area.totalTests} pruebas</span>
+                            <span className="text-sm font-bold text-slate-900">{area.averageScore}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg">
+                <AlertCircle className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm font-medium text-slate-500">No se pudieron cargar las estadísticas.</p>
+              </div>
+            )}
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }

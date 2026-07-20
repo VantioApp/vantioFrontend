@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 interface RequestOptions {
   method?: string;
@@ -21,6 +21,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    credentials: 'include', // Enviar cookies automáticamente
   });
 
   if (!response.ok) {
@@ -40,6 +41,9 @@ export const api = {
 
   put: <T>(endpoint: string, body?: unknown, token?: string | null) =>
     request<T>(endpoint, { method: 'PUT', body, token }),
+
+  patch: <T>(endpoint: string, body?: unknown, token?: string | null) =>
+    request<T>(endpoint, { method: 'PATCH', body, token }),
 
   delete: <T>(endpoint: string, token?: string | null) =>
     request<T>(endpoint, { method: 'DELETE', token }),
