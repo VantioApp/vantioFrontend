@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useQuery } from '@tanstack/react-query';
 import { Users, FileText, TrendingUp, BookOpen, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useAuthHydration } from '@/hooks/useAuthHydration';
@@ -26,11 +27,16 @@ export default function AdminClient({ initialStats }: AdminClientProps) {
   const router = useRouter();
   const { user: storeUser, token, isAuthenticated } = useAuthStore();
   const isHydrated = useAuthHydration();
-  const [stats, setStats] = useState<AdminStats | null>(initialStats);
   const [days, setDays] = useState(7);
-  const [loading, setLoading] = useState(!initialStats);
 
   const user = storeUser;
+
+  const { data: stats = initialStats, isLoading } = useQuery({
+    queryKey: ['admin-stats', days],
+    queryFn: () => api.get<AdminStats>(`/admin/stats?days=${days}`, token),
+    enabled: !!isAuthenticated && !!user && !!token,
+    initialData: initialStats && days === 7 ? initialStats : undefined,
+  });
 
   useEffect(() => {
     if (!isHydrated) {
@@ -46,28 +52,6 @@ export default function AdminClient({ initialStats }: AdminClientProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated, user, router]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    // Skip initial fetch if server data is already loaded and days hasn't changed from default
-    if (initialStats && days === 7 && stats === initialStats) return;
-
-    const loadStats = async () => {
-      try {
-        setLoading(true);
-        const data = await api.get<AdminStats>(`/admin/stats?days=${days}`, token);
-        setStats(data);
-      } catch (err) {
-        console.error('Failed to load stats:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user, days, token, initialStats]);
 
   if (!user) return null;
 
@@ -165,7 +149,7 @@ export default function AdminClient({ initialStats }: AdminClientProps) {
               </div>
             </div>
 
-            {loading ? (
+            {isLoading ? (
               <p className="text-center py-8 text-slate-400 text-sm">Cargando estadisticas...</p>
             ) : stats ? (
               <div className="space-y-4">

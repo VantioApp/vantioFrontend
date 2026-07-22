@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { Users, Search, Mail, Calendar, Award, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useAuthHydration } from '@/hooks/useAuthHydration';
@@ -33,10 +34,21 @@ export default function AdminUsersPage() {
   const token = useAuthStore((s) => s.token);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
-  const [usersData, setUsersData] = useState<UsersResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: ['admin-users', page, searchTerm],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '20',
+      });
+      if (searchTerm) params.set('search', searchTerm);
+      return api.get<UsersResponse>(`/admin/users?${params.toString()}`, token);
+    },
+    enabled: !!isAuthenticated && !!user && !!token,
+  });
 
   useEffect(() => {
     if (!isHydrated) {
@@ -46,37 +58,11 @@ export default function AdminUsersPage() {
     
     console.log('[AdminUsers] Hydrated. user.role:', user?.role);
     
-    // El proxy ya protege contra usuarios no autenticados
-    // Solo verificamos el rol aquí
     if (user?.role !== 'admin') {
       console.log('[AdminUsers] User is not admin, redirecting to dashboard');
       router.push('/dashboard');
     }
   }, [isHydrated, user, router]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    const loadUsers = async () => {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: '20',
-        });
-        if (searchTerm) params.set('search', searchTerm);
-
-        const data = await api.get<UsersResponse>(`/admin/users?${params.toString()}`, token);
-        setUsersData(data);
-      } catch (err) {
-        console.error('Failed to load users:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUsers();
-  }, [isAuthenticated, user, page, searchTerm]);
 
   if (!user) return null;
 
@@ -111,7 +97,7 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="p-8 text-center">
             <p className="text-sm text-slate-400">Cargando usuarios...</p>
           </div>

@@ -101,6 +101,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${merriweather.variable} ${inter.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://lh3.googleusercontent.com" />
+      </head>
       <body className="min-h-screen antialiased">
         <Providers>{children}</Providers>
       </body>

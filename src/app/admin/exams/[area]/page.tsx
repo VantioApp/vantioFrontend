@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Search, Filter, Plus, Eye, EyeOff, Edit2, ChevronLeft, ChevronRight, Loader2,
 } from 'lucide-react';
@@ -9,29 +11,80 @@ import { useAuthStore } from '@/stores/authStore';
 import { useAuthHydration } from '@/hooks/useAuthHydration';
 import api from '@/lib/api';
 import type { AdminQuestion, AdminQuestionsResponse, AdminSubjectsResponse } from '@/types';
-import { QuestionFormModal } from '@/components/admin/QuestionFormModal';
+
+const QuestionFormModal = dynamic(() => import('@/components/admin/QuestionFormModal').then((m) => m.QuestionFormModal), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-xl shadow-xl max-w-3xl w-full p-8 text-center"><p className="text-sm text-slate-400">Cargando...</p></div></div>,
+});
 
 export default function AreaQuestionsPage() {
   const router = useRouter();
   const params = useParams();
+  const queryClient = useQueryClient();
   const area = decodeURIComponent(params.area as string);
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
 
-  const [questions, setQuestions] = useState<AdminQuestion[]>([]);
-  const [subjects, setSubjects] = useState<AdminSubjectsResponse>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<AdminQuestion | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['admin-subjects'],
+    queryFn: () => api.get<AdminSubjectsResponse>('/admin/subjects', token).then((d) => d.filter((s) => s.area === area)),
+    enabled: !!isAuthenticated && !!user && !!token,
+  });
+
+  const { data: questionsData, isLoading } = useQuery({
+    queryKey: ['admin-questions', area, page, search, subjectFilter, statusFilter],
+    queryFn: () => {
+      const queryParams = new URLSearchParams({
+        area,
+        page: page.toString(),
+        limit: '20',
+      });
+      if (search) queryParams.set('search', search);
+      if (subjectFilter) queryParams.set('subjectId', subjectFilter);
+      if (statusFilter) queryParams.set('isActive', statusFilter);
+      return api.get<AdminQuestionsResponse>(`/admin/questions?${queryParams.toString()}`, token);
+    },
+    enabled: !!isAuthenticated && !!user && !!token,
+  });
+
+  const questions = questionsData?.questions ?? [];
+  const totalPages = questionsData?.totalPages ?? 1;
+  const total = questionsData?.total ?? 0;
+
+  const toggleMutation = useMutation({
+    mutationFn: (questionId: string) =>
+      api.patch<AdminQuestion>(`/admin/questions/${questionId}/toggle`, null, token),
+    onMutate: (questionId) => {
+      setTogglingId(questionId);
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData<AdminQuestionsResponse>(
+        ['admin-questions', area, page, search, subjectFilter, statusFilter],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            questions: old.questions.map((q) =>
+              q.id === updated.id ? updated : q
+            ),
+          };
+        }
+      );
+    },
+    onSettled: () => {
+      setTogglingId(null);
+    },
+  });
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -40,72 +93,7 @@ export default function AreaQuestionsPage() {
     }
   }, [isHydrated, isAuthenticated, user, router]);
 
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    const loadSubjects = async () => {
-      try {
-        const data = await api.get<AdminSubjectsResponse>('/admin/subjects', token);
-        setSubjects(data.filter((s) => s.area === area));
-      } catch (err) {
-        console.error('Failed to load subjects:', err);
-      }
-    };
-
-    loadSubjects();
-  }, [isAuthenticated, user, token, area]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    const loadQuestions = async () => {
-      try {
-        setLoading(true);
-        const queryParams = new URLSearchParams({
-          area,
-          page: page.toString(),
-          limit: '20',
-        });
-        if (search) queryParams.set('search', search);
-        if (subjectFilter) queryParams.set('subjectId', subjectFilter);
-        if (statusFilter) queryParams.set('isActive', statusFilter);
-
-        const data = await api.get<AdminQuestionsResponse>(
-          `/admin/questions?${queryParams.toString()}`,
-          token,
-        );
-        setQuestions(data.questions);
-        setTotalPages(data.totalPages);
-        setTotal(data.total);
-      } catch (err) {
-        console.error('Failed to load questions:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadQuestions();
-  }, [isAuthenticated, user, token, area, page, search, subjectFilter, statusFilter]);
-
   if (!user) return null;
-
-  const handleToggleActive = async (questionId: string) => {
-    setTogglingId(questionId);
-    try {
-      const updated = await api.patch<AdminQuestion>(
-        `/admin/questions/${questionId}/toggle`,
-        null,
-        token,
-      );
-      setQuestions((prev) =>
-        prev.map((q) => (q.id === questionId ? updated : q)),
-      );
-    } catch (err) {
-      console.error('Failed to toggle question:', err);
-    } finally {
-      setTogglingId(null);
-    }
-  };
 
   const handleEdit = (question: AdminQuestion) => {
     setEditingQuestion(question);
@@ -121,6 +109,8 @@ export default function AreaQuestionsPage() {
     setShowFormModal(false);
     setEditingQuestion(null);
     setPage(1);
+    queryClient.invalidateQueries({ queryKey: ['admin-questions'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-subjects'] });
     router.refresh();
   };
 
@@ -199,7 +189,7 @@ export default function AreaQuestionsPage() {
             </div>
           </div>
 
-          {loading ? (
+          {isLoading ? (
             <div className="p-8 text-center">
               <p className="text-sm text-slate-400">Cargando preguntas...</p>
             </div>
@@ -261,7 +251,7 @@ export default function AreaQuestionsPage() {
 
                     <div className="flex items-center gap-1 shrink-0">
                       <button
-                        onClick={() => handleToggleActive(question.id)}
+                        onClick={() => toggleMutation.mutate(question.id)}
                         disabled={togglingId === question.id}
                         className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
                           question.isActive

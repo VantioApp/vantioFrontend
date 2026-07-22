@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useQuery } from '@tanstack/react-query';
 import { LogOut, BookOpen, Users, CheckCircle2, XCircle } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 import { useAuthStore } from '@/stores/authStore';
@@ -33,11 +34,15 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
   const { user: storeUser, token, logout, isAuthenticated } = useAuthStore();
   const { startQuiz } = useQuizStore();
   const isHydrated = useAuthHydration();
-  const [history, setHistory] = useState<TestHistoryItem[]>(initialHistory || []);
-  const [loading, setLoading] = useState(!initialHistory);
   const [showAreaModal, setShowAreaModal] = useState(false);
 
   const user = storeUser || initialUser;
+
+  const { data: history = initialHistory || [], isLoading } = useQuery({
+    queryKey: ['quiz-history', user?.id],
+    queryFn: () => api.get<TestHistoryItem[]>(`/quiz/history/${user!.id}`, token),
+    enabled: !!user?.id && !!token && !initialHistory,
+  });
 
   useEffect(() => {
     if (!isHydrated) {
@@ -53,26 +58,6 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated, user, router]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    if (initialHistory) return;
-
-    const loadHistory = async () => {
-      try {
-        setLoading(true);
-        const data = await api.get<TestHistoryItem[]>(`/quiz/history/${user.id}`, token);
-        setHistory(data);
-      } catch (err) {
-        console.error('Failed to load history:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadHistory();
-  }, [user, token, initialHistory]);
 
   const handleStartQuiz = async (area: string) => {
     setShowAreaModal(false);
@@ -163,7 +148,7 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
                   <button className="text-amber-600 text-xs font-semibold hover:underline">Ver Todo</button>
                 </div>
 
-                {loading ? (
+                {isLoading ? (
                   <p className="text-center py-8 text-slate-400 text-sm">Cargando historial...</p>
                 ) : history.length > 0 ? (
                   <div className="overflow-x-auto">

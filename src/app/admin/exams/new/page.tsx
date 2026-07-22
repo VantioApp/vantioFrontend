@@ -1,13 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useAuthHydration } from '@/hooks/useAuthHydration';
 import api from '@/lib/api';
 import type { AdminSubjectsResponse } from '@/types';
-import { QuestionFormModal } from '@/components/admin/QuestionFormModal';
+
+const QuestionFormModal = dynamic(() => import('@/components/admin/QuestionFormModal').then((m) => m.QuestionFormModal), {
+  ssr: false,
+  loading: () => <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center"><p className="text-sm text-slate-400">Cargando...</p></div>,
+});
 
 export default function NewQuestionPage() {
   const router = useRouter();
@@ -15,9 +21,12 @@ export default function NewQuestionPage() {
   const token = useAuthStore((s) => s.token);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
-  const [subjects, setSubjects] = useState<AdminSubjectsResponse>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+
+  const { data: subjects = [], isLoading } = useQuery({
+    queryKey: ['admin-subjects'],
+    queryFn: () => api.get<AdminSubjectsResponse>('/admin/subjects', token),
+    enabled: !!isAuthenticated && !!user && !!token,
+  });
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -26,27 +35,9 @@ export default function NewQuestionPage() {
     }
   }, [isHydrated, isAuthenticated, user, router]);
 
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    const loadSubjects = async () => {
-      try {
-        const data = await api.get<AdminSubjectsResponse>('/admin/subjects', token);
-        setSubjects(data);
-        setShowForm(true);
-      } catch (err) {
-        console.error('Failed to load subjects:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSubjects();
-  }, [isAuthenticated, user]);
-
   if (!user) return null;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
         <p className="text-sm text-slate-400">Cargando...</p>
@@ -73,15 +64,13 @@ export default function NewQuestionPage() {
         </div>
       </div>
 
-      {showForm && (
-        <QuestionFormModal
-          question={null}
-          subjects={subjects}
-          onClose={() => router.push('/admin/exams')}
-          onSuccess={() => router.push('/admin/exams')}
-          token={token}
-        />
-      )}
+      <QuestionFormModal
+        question={null}
+        subjects={subjects}
+        onClose={() => router.push('/admin/exams')}
+        onSuccess={() => router.push('/admin/exams')}
+        token={token}
+      />
     </>
   );
 }

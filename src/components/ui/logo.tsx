@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface LogoProps {
   variant?: 'full' | 'isotype';
   theme?: 'light' | 'dark';
@@ -9,11 +11,13 @@ export function Logo({ variant = 'full', theme = 'light', height = 32, className
   const src = `/images/logos/${variant === 'full' ? 'logotipo' : 'isotipo'}-vantio${theme === 'dark' ? '-dark' : ''}.svg`;
 
   return (
-    <img
+    <Image
       src={src}
       alt="Vantio"
-      style={{ height: `${height}px`, width: 'auto' }}
+      width={variant === 'full' ? height * 4 : height}
+      height={height}
       className={className}
+      priority={variant === 'isotype'}
     />
   );
 }
