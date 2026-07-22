@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Merriweather, Inter } from "next/font/google";
-import { AuthHydrator } from "@/components/AuthHydrator";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const merriweather = Merriweather({
@@ -102,8 +102,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${merriweather.variable} ${inter.variable}`}>
       <body className="min-h-screen antialiased">
-        <AuthHydrator />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

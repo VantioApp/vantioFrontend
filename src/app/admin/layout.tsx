@@ -1,5 +1,9 @@
 'use client';
 
+// TODO: Convertir a Server Component parcial — el sidebar de navegacion puede ser un Server Component
+// que lea el rol del usuario desde cookies. La proteccion de ruta ya es manejada por middleware.ts.
+// Mantener 'use client' solo para los elementos interactivos (logout, estado activo del nav).
+
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -21,7 +25,9 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout, isAuthenticated } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') {

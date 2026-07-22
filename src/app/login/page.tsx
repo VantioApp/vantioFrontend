@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import Link from 'next/link';
 import { Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
@@ -10,7 +10,11 @@ import { useAuthStore } from '@/stores/authStore';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const login = useAuthStore((s) => s.login);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const error = useAuthStore((s) => s.error);
+  const clearError = useAuthStore((s) => s.clearError);
+  const shouldReduce = useReducedMotion();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -57,8 +61,8 @@ export default function LoginPage() {
       {/* Main Canvas Container */}
       <main className="flex-grow flex flex-col items-center justify-center p-6 my-8 z-10">
         <motion.div 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={shouldReduce ? false : { opacity: 0, y: 15 }}
+          animate={shouldReduce ? false : { opacity: 1, y: 0 }}
           className="w-full max-w-md bg-white rounded-xl shadow-md p-8 border border-slate-200/80"
         >
           {/* Logo Heading */}

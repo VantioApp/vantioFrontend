@@ -11,7 +11,9 @@ import { QuestionFormModal } from '@/components/admin/QuestionFormModal';
 
 export default function NewQuestionPage() {
   const router = useRouter();
-  const { user, token, isAuthenticated } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
   const [subjects, setSubjects] = useState<AdminSubjectsResponse>([]);
   const [loading, setLoading] = useState(true);

@@ -33,6 +33,8 @@ export const useAuthStore = create<AuthStore>()(
             '/auth/login',
             { email, password }
           );
+          document.cookie = `access_token=${response.access_token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+          document.cookie = `vantio_token=${response.access_token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
           set({
             user: response.user,
             token: response.access_token,
@@ -55,6 +57,8 @@ export const useAuthStore = create<AuthStore>()(
             '/auth/register',
             { name, email, password }
           );
+          document.cookie = `access_token=${response.access_token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+          document.cookie = `vantio_token=${response.access_token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
           set({
             user: response.user,
             token: response.access_token,
@@ -76,6 +80,8 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           console.error('Error durante logout:', error);
         } finally {
+          document.cookie = 'access_token=; path=/; max-age=0';
+          document.cookie = 'vantio_token=; path=/; max-age=0';
           set({
             user: null,
             token: null,

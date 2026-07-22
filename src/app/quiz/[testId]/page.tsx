@@ -1,8 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+// TODO: Convertir a Server Component — la estructura actual esta profundamente acoplada a Zustand
+// (quizStore, useAuthStore) y requiere un timer en tiempo real. Para convertir:
+// 1. Crear un QuizClient.tsx con toda la logica interactiva (timer, seleccion de opciones, navegacion)
+// 2. El page.tsx Server Component leeria el token de cookies, obtendria las preguntas de la API
+//    via GET /quiz/:testId, y pasaria initialQuestions a QuizClient
+// 3. El manejo de submit se haria via Server Action en lugar de fetch directo del cliente
+// 4. La autenticacion ya es manejada por el middleware.ts (edge), eliminando la necesidad
+//    del useEffect con isAuthenticated
+
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Timer, X, ArrowRight, Gavel } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 import { useQuizStore } from '@/stores/quizStore';
@@ -11,11 +19,17 @@ import { formatTime } from '@/lib/utils';
 
 export default function QuizPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
-  const { 
-    questions, currentQuestionIndex, selectedOptionIndex, timeLeft,
-    isActive, isFinished, selectOption, nextQuestion, tickTimer, testId
-  } = useQuizStore();
+  const timerRef = useRef<HTMLSpanElement>(null);
+  const timerContainerRef = useRef<HTMLDivElement>(null);
+  const timerIconRef = useRef<SVGSVGElement>(null);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const questions = useQuizStore((s) => s.questions);
+  const currentQuestionIndex = useQuizStore((s) => s.currentQuestionIndex);
+  const selectedOptionIndex = useQuizStore((s) => s.selectedOptionIndex);
+  const isActive = useQuizStore((s) => s.isActive);
+  const isFinished = useQuizStore((s) => s.isFinished);
+  const selectOption = useQuizStore((s) => s.selectOption);
+  const nextQuestion = useQuizStore((s) => s.nextQuestion);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -24,16 +38,58 @@ export default function QuizPage() {
   }, [isAuthenticated, router]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (isActive && !isFinished) {
-      interval = setInterval(() => {
-        tickTimer();
-      }, 1000);
+    if (!isActive || isFinished) return;
+
+    const timerContainer = timerContainerRef.current;
+    const timerSpan = timerRef.current;
+    const timerIcon = timerIconRef.current;
+    const initialTime = useQuizStore.getState().timeLeft;
+
+    if (timerSpan) {
+      timerSpan.textContent = formatTime(initialTime);
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive, isFinished, tickTimer]);
+    if (timerContainer && initialTime <= 300) {
+      timerContainer.className = timerContainer.className
+        .replace(/bg-slate-50 border-slate-200 text-slate-700/g, '')
+        + ' bg-rose-50 border-rose-200 text-rose-600 animate-pulse';
+      if (timerIcon) {
+        timerIcon.classList.add('text-rose-500');
+        timerIcon.classList.remove('text-amber-600');
+      }
+    }
+
+    const interval = setInterval(() => {
+      const currentTime = useQuizStore.getState().timeLeft;
+      const newTime = currentTime - 1;
+
+      useQuizStore.setState({ timeLeft: newTime });
+
+      if (timerSpan) {
+        timerSpan.textContent = formatTime(newTime);
+      }
+
+      if (timerContainer) {
+        const isCritical = newTime <= 300;
+        const isCurrentlyCritical = timerContainer.classList.contains('bg-rose-50');
+        if (isCritical && !isCurrentlyCritical) {
+          timerContainer.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-600', 'animate-pulse');
+          timerContainer.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
+          if (timerIcon) {
+            timerIcon.classList.add('text-rose-500');
+            timerIcon.classList.remove('text-amber-600');
+          }
+        }
+      }
+
+      if (newTime <= 0) {
+        clearInterval(interval);
+        useQuizStore.setState({ timeLeft: 0, isActive: false, isFinished: true });
+        useQuizStore.getState().finishQuiz();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isActive, isFinished]);
 
   if (questions.length === 0) {
     return (
@@ -45,7 +101,8 @@ export default function QuizPage() {
 
   const currentQuestion = questions[currentQuestionIndex];
   const progressPercent = Math.round(((currentQuestionIndex + 1) / questions.length) * 100);
-  const isTimeCritical = timeLeft <= 300;
+  const initialTimeLeft = useQuizStore.getState().timeLeft;
+  const isTimeCritical = initialTimeLeft <= 300;
   const optionLetters = ['A', 'B', 'C', 'D'];
 
   const handleCancelQuiz = () => {
@@ -73,11 +130,14 @@ export default function QuizPage() {
             </span>
           </div>
 
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${
-            isTimeCritical ? 'bg-rose-50 border-rose-200 text-rose-600 animate-pulse' : 'bg-slate-50 border-slate-200 text-slate-700'
-          }`}>
-            <Timer className={`w-4 h-4 ${isTimeCritical ? 'text-rose-500' : 'text-amber-600'}`} />
-            <span className="font-mono text-sm font-bold tabular-nums">{formatTime(timeLeft)}</span>
+          <div 
+            ref={timerContainerRef} 
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${
+              isTimeCritical ? 'bg-rose-50 border-rose-200 text-rose-600 animate-pulse' : 'bg-slate-50 border-slate-200 text-slate-700'
+            }`}
+          >
+            <Timer ref={timerIconRef} className={`w-4 h-4 ${isTimeCritical ? 'text-rose-500' : 'text-amber-600'}`} />
+            <span ref={timerRef} className="font-mono text-sm font-bold tabular-nums">{formatTime(initialTimeLeft)}</span>
           </div>
         </div>
       </header>

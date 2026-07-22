@@ -29,7 +29,9 @@ interface UsersResponse {
 
 export default function AdminUsersPage() {
   const router = useRouter();
-  const { user, token, isAuthenticated } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
   const [usersData, setUsersData] = useState<UsersResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState('');

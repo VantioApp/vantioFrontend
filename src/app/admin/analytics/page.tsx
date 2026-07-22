@@ -7,7 +7,8 @@ import { useAuthStore } from '@/stores/authStore';
 
 export default function AdminAnalyticsPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') {

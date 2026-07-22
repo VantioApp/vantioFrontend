@@ -1,15 +1,17 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Scale, ArrowRight, Award, GraduationCap, CheckCircle, LineChart, BookOpen } from 'lucide-react';
+import { Scale, ArrowRight, Award, GraduationCap, LineChart, BookOpen } from 'lucide-react';
 
 export function LandingAnimations() {
   return null;
 }
 
 export function HeroSection() {
+  const shouldReduce = useReducedMotion();
+
   return (
     <section className="relative bg-white border-b border-slate-200/60 overflow-hidden py-16 md:py-24">
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#0f172a 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} />
@@ -17,8 +19,8 @@ export function HeroSection() {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
         <div className="lg:col-span-6 flex flex-col items-start text-left gap-6">
           <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={shouldReduce ? false : { opacity: 0, y: 15 }}
+            animate={shouldReduce ? false : { opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200/80"
           >
@@ -27,8 +29,8 @@ export function HeroSection() {
           </motion.div>
 
           <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={shouldReduce ? false : { opacity: 0, y: 20 }}
+            animate={shouldReduce ? false : { opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="font-serif text-4xl sm:text-5xl lg:text-6xl text-slate-900 font-bold leading-[1.1] tracking-tight"
           >
@@ -36,8 +38,8 @@ export function HeroSection() {
           </motion.h1>
 
           <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={shouldReduce ? false : { opacity: 0, y: 20 }}
+            animate={shouldReduce ? false : { opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg text-slate-600 leading-relaxed max-w-xl"
           >
@@ -45,8 +47,8 @@ export function HeroSection() {
           </motion.p>
 
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={shouldReduce ? false : { opacity: 0, y: 20 }}
+            animate={shouldReduce ? false : { opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-2"
           >
@@ -68,8 +70,8 @@ export function HeroSection() {
 
         <div className="lg:col-span-6 relative flex justify-center">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={shouldReduce ? false : { opacity: 0, scale: 0.95 }}
+            animate={shouldReduce ? false : { opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
             className="relative w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100"
           >
@@ -84,8 +86,8 @@ export function HeroSection() {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent pointer-events-none" />
             
             <motion.div 
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={shouldReduce ? false : { opacity: 0, x: 30 }}
+              animate={shouldReduce ? false : { opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
               className="absolute bottom-6 left-6 right-6 md:-left-8 md:right-auto md:w-64 bg-white p-4 rounded-xl shadow-lg border border-slate-200/80 flex items-center gap-4"
             >
@@ -105,6 +107,8 @@ export function HeroSection() {
 }
 
 export function FeaturesSection() {
+  const shouldReduce = useReducedMotion();
+
   return (
     <section id="features" className="py-20 bg-slate-50">
       <div className="max-w-7xl mx-auto px-6">
@@ -119,7 +123,7 @@ export function FeaturesSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <motion.div 
-            whileHover={{ y: -4 }}
+            whileHover={shouldReduce ? undefined : { y: -4 }}
             className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"
           >
             <div>
@@ -138,7 +142,7 @@ export function FeaturesSection() {
           </motion.div>
 
           <motion.div 
-            whileHover={{ y: -4 }}
+            whileHover={shouldReduce ? undefined : { y: -4 }}
             className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"
           >
             <div>
@@ -162,7 +166,7 @@ export function FeaturesSection() {
           </motion.div>
 
           <motion.div 
-            whileHover={{ y: -4 }}
+            whileHover={shouldReduce ? undefined : { y: -4 }}
             className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between"
           >
             <div>

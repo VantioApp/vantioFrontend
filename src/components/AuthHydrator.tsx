@@ -1,28 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore, useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 
+const getServerSnapshot = () => false;
+
+function useAuthHydrated(): boolean {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      if (useAuthStore.persist.hasHydrated()) return () => {};
+      const unsub = useAuthStore.persist.onFinishHydration(() => onStoreChange());
+      return unsub;
+    },
+    () => useAuthStore.persist.hasHydrated(),
+    getServerSnapshot
+  );
+}
+
 export function AuthHydrator() {
-  const [isHydrated, setIsHydrated] = useState(false);
-  const { token, loadProfile } = useAuthStore();
-
-  useEffect(() => {
-    console.log('[AuthHydrator] Mounting, checking hydration...');
-    
-    if (useAuthStore.persist.hasHydrated()) {
-      console.log('[AuthHydrator] Already hydrated');
-      setIsHydrated(true);
-      return;
-    }
-
-    const unsub = useAuthStore.persist.onFinishHydration(() => {
-      console.log('[AuthHydrator] Hydration finished');
-      setIsHydrated(true);
-    });
-
-    return unsub;
-  }, []);
+  const isHydrated = useAuthHydrated();
+  const token = useAuthStore((s) => s.token);
+  const loadProfile = useAuthStore((s) => s.loadProfile);
 
   useEffect(() => {
     console.log('[AuthHydrator] isHydrated:', isHydrated, 'token:', token ? 'EXISTS' : 'NULL');

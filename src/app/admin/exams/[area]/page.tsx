@@ -15,7 +15,9 @@ export default function AreaQuestionsPage() {
   const router = useRouter();
   const params = useParams();
   const area = decodeURIComponent(params.area as string);
-  const { user, token, isAuthenticated } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
 
   const [questions, setQuestions] = useState<AdminQuestion[]>([]);
