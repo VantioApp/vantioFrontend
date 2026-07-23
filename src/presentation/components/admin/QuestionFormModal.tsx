@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import api from '@/lib/api';
-import type { AdminQuestion, AdminSubjectsResponse, QuestionOption } from '@/types';
+import { useCreateQuestion } from '@/presentation/hooks/use-create-question';
+import { useUpdateQuestion } from '@/presentation/hooks/use-update-question';
+import type { AdminQuestion, AdminSubject, QuestionOption } from '@/core/interfaces';
 
 interface QuestionFormModalProps {
   question: AdminQuestion | null;
-  subjects: AdminSubjectsResponse;
+  subjects: AdminSubject[];
   onClose: () => void;
   onSuccess: () => void;
-  token: string | null;
 }
 
 export function QuestionFormModal({
@@ -18,7 +18,6 @@ export function QuestionFormModal({
   subjects,
   onClose,
   onSuccess,
-  token,
 }: QuestionFormModalProps) {
   const [text, setText] = useState(question?.text || '');
   const [options, setOptions] = useState<QuestionOption[]>(
@@ -36,8 +35,12 @@ export function QuestionFormModal({
   const [difficulty, setDifficulty] = useState(question?.difficulty || 1);
   const [subjectId, setSubjectId] = useState(question?.subjectId || subjects[0]?.id || '');
   const [source, setSource] = useState(question?.source || '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
+
+  const createMutation = useCreateQuestion();
+  const updateMutation = useUpdateQuestion();
+  const isPending = createMutation.isPending || updateMutation.isPending;
+  const error = createMutation.error || updateMutation.error;
 
   const handleOptionChange = (index: number, field: 'label' | 'text', value: string) => {
     const newOptions = [...options];
@@ -65,51 +68,50 @@ export function QuestionFormModal({
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!text.trim()) {
-      setError('El texto de la pregunta es requerido');
+      setValidationError('El texto de la pregunta es requerido');
       return;
     }
     if (options.some((o) => !o.text.trim())) {
-      setError('Todas las opciones deben tener texto');
+      setValidationError('Todas las opciones deben tener texto');
       return;
     }
     if (correctAnswers.length === 0) {
-      setError('Debes seleccionar al menos una respuesta correcta');
+      setValidationError('Debes seleccionar al menos una respuesta correcta');
       return;
     }
     if (!subjectId) {
-      setError('Debes seleccionar una materia');
+      setValidationError('Debes seleccionar una materia');
       return;
     }
 
-    try {
-      setLoading(true);
-      setError('');
+    setValidationError('');
 
-      const data = {
-        text,
-        options,
-        correctAnswers,
-        explanation: explanation || undefined,
-        difficulty,
-        subjectId,
-        source: source || undefined,
-      };
+    const data = {
+      text,
+      options,
+      correctAnswers,
+      explanation: explanation || undefined,
+      difficulty,
+      subjectId,
+      source: source || undefined,
+    };
 
-      if (question) {
-        await api.put(`/admin/questions/${question.id}`, data, token);
-      } else {
-        await api.post('/admin/questions', data, token);
-      }
-
-      onSuccess();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar');
-    } finally {
-      setLoading(false);
+    if (question) {
+      updateMutation.mutate(
+        { id: question.id, data },
+        { onSuccess: () => onSuccess() }
+      );
+    } else {
+      createMutation.mutate(
+        data,
+        { onSuccess: () => onSuccess() }
+      );
     }
   };
+
+  const displayError = validationError || error?.message;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -252,9 +254,9 @@ export function QuestionFormModal({
             />
           </div>
 
-          {error && (
+          {displayError && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700">
-              {error}
+              {displayError}
             </div>
           )}
         </div>
@@ -268,10 +270,10 @@ export function QuestionFormModal({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={isPending}
             className="px-4 py-2 text-sm font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
-            {loading ? 'Guardando...' : question ? 'Actualizar' : 'Crear'}
+            {isPending ? 'Guardando...' : question ? 'Actualizar' : 'Crear'}
           </button>
         </div>
       </div>

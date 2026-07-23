@@ -11,8 +11,8 @@ import {
   Users, FileText, BarChart2, Settings, HelpCircle, LogOut, PlusCircle,
   LayoutDashboard,
 } from 'lucide-react';
-import { Logo } from '@/components/ui/logo';
-import { useAuthStore } from '@/stores/authStore';
+import { Logo } from '@/presentation/components/ui/logo';
+import { useAuthStore } from '@/presentation/stores/authStore';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [isAuthenticated, user, router]);
 
   const handleLogout = () => {
-    logout();
+    clearAuth();
     router.push('/');
   };
 

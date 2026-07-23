@@ -2,39 +2,23 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import api from '@/lib/api';
+import { useCreateArea } from '@/presentation/hooks/use-create-area';
 
 interface CreateAreaModalProps {
   onClose: () => void;
   onSuccess: () => void;
-  token: string | null;
 }
 
 export default function CreateAreaModal({
   onClose,
   onSuccess,
-  token,
 }: CreateAreaModalProps) {
   const [areaName, setAreaName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { mutate: createArea, isPending, error } = useCreateArea();
 
-  const handleSubmit = async () => {
-    if (!areaName.trim()) {
-      setError('El nombre del área es requerido');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-      await api.post('/admin/areas', { name: areaName.trim() }, token);
-      onSuccess();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear área');
-    } finally {
-      setLoading(false);
-    }
+  const handleSubmit = () => {
+    if (!areaName.trim()) return;
+    createArea(areaName.trim(), { onSuccess: () => onSuccess() });
   };
 
   return (
@@ -72,7 +56,7 @@ export default function CreateAreaModal({
 
           {error && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700">
-              {error}
+              {error.message}
             </div>
           )}
         </div>
@@ -86,10 +70,10 @@ export default function CreateAreaModal({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!areaName.trim() || loading}
+            disabled={!areaName.trim() || isPending}
             className="px-4 py-2 text-sm font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
-            {loading ? 'Creando...' : 'Crear Área'}
+            {isPending ? 'Creando...' : 'Crear Área'}
           </button>
         </div>
       </div>

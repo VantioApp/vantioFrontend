@@ -1,22 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import api from '@/lib/api';
+import { useImportQuestions } from '@/presentation/hooks/use-import-questions';
 
 interface ImportJsonModalProps {
   onClose: () => void;
   onSuccess: () => void;
-  token: string | null;
 }
 
 export default function ImportJsonModal({
   onClose,
   onSuccess,
-  token,
 }: ImportJsonModalProps) {
   const [jsonContent, setJsonContent] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
+  const { mutate: importQuestions, isPending, error } = useImportQuestions();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,19 +27,17 @@ export default function ImportJsonModal({
     reader.readAsText(file);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     try {
-      setLoading(true);
-      setError('');
+      setValidationError('');
       const data = JSON.parse(jsonContent);
-      await api.post('/admin/questions/import', data, token);
-      onSuccess();
+      importQuestions(data, { onSuccess: () => onSuccess() });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al importar');
-    } finally {
-      setLoading(false);
+      setValidationError(err instanceof Error ? err.message : 'Error al parsear JSON');
     }
   };
+
+  const displayError = validationError || error?.message;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -80,9 +76,9 @@ export default function ImportJsonModal({
             </div>
           )}
 
-          {error && (
+          {displayError && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700">
-              {error}
+              {displayError}
             </div>
           )}
         </div>
@@ -96,10 +92,10 @@ export default function ImportJsonModal({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!jsonContent || loading}
+            disabled={!jsonContent || isPending}
             className="px-4 py-2 text-sm font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
-            {loading ? 'Importando...' : 'Importar'}
+            {isPending ? 'Importando...' : 'Importar'}
           </button>
         </div>
       </div>

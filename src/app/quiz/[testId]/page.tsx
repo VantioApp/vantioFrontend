@@ -1,28 +1,19 @@
 'use client';
 
-// TODO: Convertir a Server Component — la estructura actual esta profundamente acoplada a Zustand
-// (quizStore, useAuthStore) y requiere un timer en tiempo real. Para convertir:
-// 1. Crear un QuizClient.tsx con toda la logica interactiva (timer, seleccion de opciones, navegacion)
-// 2. El page.tsx Server Component leeria el token de cookies, obtendria las preguntas de la API
-//    via GET /quiz/:testId, y pasaria initialQuestions a QuizClient
-// 3. El manejo de submit se haria via Server Action en lugar de fetch directo del cliente
-// 4. La autenticacion ya es manejada por el middleware.ts (edge), eliminando la necesidad
-//    del useEffect con isAuthenticated
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Timer, X, ArrowRight, Gavel } from 'lucide-react';
-import { Logo } from '@/components/ui/logo';
-import { useQuizStore } from '@/stores/quizStore';
-import { useAuthStore } from '@/stores/authStore';
-import { formatTime } from '@/lib/utils';
+import { Logo } from '@/presentation/components/ui/logo';
+import { useQuizStore } from '@/presentation/stores/quizStore';
+import { useSubmitQuiz } from '@/presentation/hooks/use-quiz';
+import { formatTime } from '@/core/utils/format-time';
 
 export default function QuizPage() {
   const router = useRouter();
+  const { mutate: submitQuiz } = useSubmitQuiz();
   const timerRef = useRef<HTMLSpanElement>(null);
   const timerContainerRef = useRef<HTMLDivElement>(null);
   const timerIconRef = useRef<SVGSVGElement>(null);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const questions = useQuizStore((s) => s.questions);
   const currentQuestionIndex = useQuizStore((s) => s.currentQuestionIndex);
   const selectedOptionIndex = useQuizStore((s) => s.selectedOptionIndex);
@@ -30,12 +21,28 @@ export default function QuizPage() {
   const isFinished = useQuizStore((s) => s.isFinished);
   const selectOption = useQuizStore((s) => s.selectOption);
   const nextQuestion = useQuizStore((s) => s.nextQuestion);
+  const tickTimer = useQuizStore((s) => s.tickTimer);
+  const testId = useQuizStore((s) => s.testId);
+  const answers = useQuizStore((s) => s.answers);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
+  const handleFinishQuiz = useCallback(() => {
+    if (!testId) return;
+    const submitAnswers = answers.map((a) => ({
+      testQuestionId: a.questionId,
+      selectedAnswer: questions.find((q) => q.id === a.questionId)?.options[a.selectedIndex]?.label || '',
+    }));
+    submitQuiz({ testId, answers: submitAnswers }, {
+      onSuccess: () => router.push(`/quiz/${testId}/results`),
+    });
+  }, [testId, answers, questions, submitQuiz, router]);
+
+  const handleNextQuestion = useCallback(() => {
+    const isLastQuestion = currentQuestionIndex + 1 >= questions.length;
+    nextQuestion();
+    if (isLastQuestion) {
+      handleFinishQuiz();
     }
-  }, [isAuthenticated, router]);
+  }, [currentQuestionIndex, questions.length, nextQuestion, handleFinishQuiz]);
 
   useEffect(() => {
     if (!isActive || isFinished) return;
@@ -59,10 +66,8 @@ export default function QuizPage() {
     }
 
     const interval = setInterval(() => {
-      const currentTime = useQuizStore.getState().timeLeft;
-      const newTime = currentTime - 1;
-
-      useQuizStore.setState({ timeLeft: newTime });
+      tickTimer();
+      const newTime = useQuizStore.getState().timeLeft;
 
       if (timerSpan) {
         timerSpan.textContent = formatTime(newTime);
@@ -83,13 +88,12 @@ export default function QuizPage() {
 
       if (newTime <= 0) {
         clearInterval(interval);
-        useQuizStore.setState({ timeLeft: 0, isActive: false, isFinished: true });
-        useQuizStore.getState().finishQuiz();
+        handleFinishQuiz();
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, isFinished]);
+  }, [isActive, isFinished, tickTimer, handleFinishQuiz]);
 
   if (questions.length === 0) {
     return (
@@ -197,7 +201,7 @@ export default function QuizPage() {
           </button>
 
           <button
-            onClick={nextQuestion}
+            onClick={handleNextQuestion}
             disabled={selectedOptionIndex === null}
             className={`inline-flex items-center gap-2 px-6 py-3.5 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm ${
               selectedOptionIndex === null

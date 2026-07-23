@@ -2,52 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { Users, Search, Mail, Calendar, Award, TrendingUp } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
-import { useAuthHydration } from '@/hooks/useAuthHydration';
-import api from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-
-interface AdminUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatarUrl: string | null;
-  createdAt: Date;
-  totalTests: number;
-  averageScore: number;
-  lastTestDate: Date | null;
-}
-
-interface UsersResponse {
-  users: AdminUser[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+import { useAuthStore } from '@/presentation/stores/authStore';
+import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
+import { useAdminUsers } from '@/presentation/hooks/use-admin-users';
+import { formatDate } from '@/core/utils/format-date';
 
 export default function AdminUsersPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const token = useAuthStore((s) => s.token);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data: usersData, isLoading } = useQuery({
-    queryKey: ['admin-users', page, searchTerm],
-    queryFn: () => {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '20',
-      });
-      if (searchTerm) params.set('search', searchTerm);
-      return api.get<UsersResponse>(`/admin/users?${params.toString()}`, token);
-    },
-    enabled: !!isAuthenticated && !!user && !!token,
+  const { data: usersData, isLoading } = useAdminUsers({
+    search: searchTerm || undefined,
+    page,
+    limit: 20,
   });
 
   useEffect(() => {

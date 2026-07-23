@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BarChart2 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/presentation/stores/authStore';
 
 export default function AdminAnalyticsPage() {
   const router = useRouter();

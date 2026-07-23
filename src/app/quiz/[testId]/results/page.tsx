@@ -1,12 +1,5 @@
 'use client';
 
-// TODO: Convertir a Server Component — esta pagina depende de quizStore (Zustand) para acceder
-// al estado del quiz (questions, score, answers). Para convertir:
-// 1. Crear un QuizResultsClient.tsx con toda la UI y logica de presentacion
-// 2. El page.tsx Server Component leeria el token de cookies, obtendria resultados via
-//    GET /quiz/:testId/results y pasaria initialData a QuizResultsClient
-// 3. La autenticacion ya es manejada por el middleware.ts (edge)
-
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -16,10 +9,10 @@ import {
   CheckCircle, AlertTriangle, Gavel, RefreshCw, 
   ChevronRight, BookOpen, Award
 } from 'lucide-react';
-import { Logo } from '@/components/ui/logo';
-import { useQuizStore } from '@/stores/quizStore';
-import { useAuthStore } from '@/stores/authStore';
-import type { Question } from '@/types';
+import { Logo } from '@/presentation/components/ui/logo';
+import { useQuizStore } from '@/presentation/stores/quizStore';
+import { useProfile } from '@/presentation/hooks/use-profile';
+import type { Question } from '@/core/interfaces';
 
 const QuestionReviewCard = React.memo(function QuestionReviewCard({
   question,
@@ -113,17 +106,17 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
 export default function QuizResultsPage() {
   const router = useRouter();
   const shouldReduce = useReducedMotion();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { data: user } = useProfile();
   const questions = useQuizStore((s) => s.questions);
   const score = useQuizStore((s) => s.score);
   const answers = useQuizStore((s) => s.answers);
   const resetQuiz = useQuizStore((s) => s.resetQuiz);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!user) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [user, router]);
 
   const totalQuestions = questions.length || 10;
   const scorePercent = Math.round((score / totalQuestions) * 100);

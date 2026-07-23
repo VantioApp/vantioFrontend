@@ -1,7 +1,9 @@
 'use client';
 
-import { useSyncExternalStore, useEffect } from 'react';
-import { useAuthStore } from '@/stores/authStore';
+import { useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
+import { useAuthStore } from '@/presentation/stores/authStore';
+import { getProfileAction } from '@/core/actions/auth/auth-actions';
 
 const getServerSnapshot = () => false;
 
@@ -20,15 +22,17 @@ function useAuthHydrated(): boolean {
 export function AuthHydrator() {
   const isHydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.token);
-  const loadProfile = useAuthStore((s) => s.loadProfile);
+  const setAuth = useAuthStore((s) => s.setAuth);
 
   useEffect(() => {
-    console.log('[AuthHydrator] isHydrated:', isHydrated, 'token:', token ? 'EXISTS' : 'NULL');
     if (isHydrated && token) {
-      console.log('[AuthHydrator] Calling loadProfile...');
-      loadProfile();
+      getProfileAction(token)
+        .then((user) => setAuth(user, token))
+        .catch(() => {
+          useAuthStore.getState().clearAuth();
+        });
     }
-  }, [isHydrated, token, loadProfile]);
+  }, [isHydrated, token, setAuth]);
 
   return null;
 }

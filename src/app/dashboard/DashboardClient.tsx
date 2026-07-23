@@ -1,28 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useQuery } from '@tanstack/react-query';
 import { LogOut, BookOpen, Users, CheckCircle2, XCircle } from 'lucide-react';
-import { Logo } from '@/components/ui/logo';
-import { useAuthStore } from '@/stores/authStore';
-import { useQuizStore } from '@/stores/quizStore';
-import { useAuthHydration } from '@/hooks/useAuthHydration';
-import api from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-import type { User } from '@/types';
-
-interface TestHistoryItem {
-  id: string;
-  totalQuestions: number;
-  correctCount: number;
-  score: number;
-  passed: boolean;
-  startedAt: string;
-  finishedAt: string | null;
-}
+import { Logo } from '@/presentation/components/ui/logo';
+import { useProfile } from '@/presentation/hooks/use-profile';
+import { useQuizHistory } from '@/presentation/hooks/use-quiz-history';
+import { useGenerateQuiz } from '@/presentation/hooks/use-quiz';
+import { useLogout } from '@/presentation/hooks/use-auth';
+import { useQuizStore } from '@/presentation/stores/quizStore';
+import { formatDate } from '@/core/utils/format-date';
+import type { User, TestHistoryItem } from '@/core/interfaces';
 
 interface DashboardClientProps {
   initialUser: User | null;
@@ -31,43 +21,20 @@ interface DashboardClientProps {
 
 export default function DashboardClient({ initialUser, initialHistory }: DashboardClientProps) {
   const router = useRouter();
-  const { user: storeUser, token, logout, isAuthenticated } = useAuthStore();
-  const { startQuiz } = useQuizStore();
-  const isHydrated = useAuthHydration();
+  const { data: user } = useProfile(initialUser || undefined);
+  const { data: history = initialHistory || [], isLoading } = useQuizHistory(user?.id);
+  const { mutate: generateQuiz } = useGenerateQuiz();
+  const { mutate: logout } = useLogout();
   const [showAreaModal, setShowAreaModal] = useState(false);
 
-  const user = storeUser || initialUser;
-
-  const { data: history = initialHistory || [], isLoading } = useQuery({
-    queryKey: ['quiz-history', user?.id],
-    queryFn: () => api.get<TestHistoryItem[]>(`/quiz/history/${user!.id}`, token),
-    enabled: !!user?.id && !!token && !initialHistory,
-  });
-
-  useEffect(() => {
-    if (!isHydrated) {
-      console.log('[Dashboard] Waiting for hydration...');
-      return;
-    }
-
-    console.log('[Dashboard] Hydrated. isAuthenticated:', isAuthenticated, 'user:', user?.name);
-
-    if (!user) {
-      console.log('[Dashboard] No user after hydration, redirecting to login');
-      router.push('/login');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, user, router]);
-
-  const handleStartQuiz = async (area: string) => {
+  const handleStartQuiz = (area: string) => {
     setShowAreaModal(false);
-    try {
-      await startQuiz(area);
-      const { testId } = useQuizStore.getState();
-      if (testId) router.push(`/quiz/${testId}`);
-    } catch (err) {
-      console.error('Failed to start quiz:', err);
-    }
+    generateQuiz({ area }, {
+      onSuccess: () => {
+        const { testId } = useQuizStore.getState();
+        if (testId) router.push(`/quiz/${testId}`);
+      },
+    });
   };
 
   const handleLogout = () => {

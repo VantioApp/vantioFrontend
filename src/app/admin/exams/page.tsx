@@ -3,26 +3,25 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { useQuery } from '@tanstack/react-query';
 import { BookOpen, FileText, Plus, Upload } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
-import { useAuthHydration } from '@/hooks/useAuthHydration';
-import api from '@/lib/api';
-import type { AdminSubjectsResponse } from '@/types';
+import { useAuthStore } from '@/presentation/stores/authStore';
+import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
+import { useAdminSubjects } from '@/presentation/hooks/use-admin-subjects';
+import type { AdminSubject } from '@/core/interfaces';
 
-const ImportJsonModal = dynamic(() => import('@/components/admin/ImportJsonModal'), {
+const ImportJsonModal = dynamic(() => import('@/presentation/components/admin/ImportJsonModal'), {
   ssr: false,
   loading: () => <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-8 text-center"><p className="text-sm text-slate-400">Cargando...</p></div></div>,
 });
 
-const CreateAreaModal = dynamic(() => import('@/components/admin/CreateAreaModal'), {
+const CreateAreaModal = dynamic(() => import('@/presentation/components/admin/CreateAreaModal'), {
   ssr: false,
   loading: () => <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 text-center"><p className="text-sm text-slate-400">Cargando...</p></div></div>,
 });
 
 interface AreaStats {
   area: string;
-  subjects: AdminSubjectsResponse;
+  subjects: AdminSubject[];
   totalQuestions: number;
   activeQuestions: number;
 }
@@ -30,17 +29,12 @@ interface AreaStats {
 export default function AdminExamsPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const token = useAuthStore((s) => s.token);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
   const [showImportModal, setShowImportModal] = useState(false);
   const [showCreateAreaModal, setShowCreateAreaModal] = useState(false);
 
-  const { data: subjects = [], isLoading } = useQuery({
-    queryKey: ['admin-subjects'],
-    queryFn: () => api.get<AdminSubjectsResponse>('/admin/subjects', token),
-    enabled: !!isAuthenticated && !!user && !!token,
-  });
+  const { data: subjects = [], isLoading } = useAdminSubjects();
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -191,7 +185,6 @@ export default function AdminExamsPage() {
             setShowImportModal(false);
             router.refresh();
           }}
-          token={token}
         />
       )}
 
@@ -202,7 +195,6 @@ export default function AdminExamsPage() {
             setShowCreateAreaModal(false);
             router.refresh();
           }}
-          token={token}
         />
       )}
     </>

@@ -3,21 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useQuery } from '@tanstack/react-query';
 import { Users, FileText, TrendingUp, BookOpen, AlertCircle } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
-import { useAuthHydration } from '@/hooks/useAuthHydration';
-import api from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-
-interface AdminStats {
-  totalUsers: number;
-  totalTests: number;
-  averageScore: number;
-  recentTestTakers: number;
-  testsByArea: { area: string; totalTests: number; averageScore: number }[];
-  availableAreas: { area: string; subjectCount: number; totalQuestions: number }[];
-}
+import { useAuthStore } from '@/presentation/stores/authStore';
+import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
+import { useAdminStats } from '@/presentation/hooks/use-admin-stats';
+import { formatDate } from '@/core/utils/format-date';
+import type { AdminStats } from '@/core/interfaces';
 
 interface AdminClientProps {
   initialStats: AdminStats | null;
@@ -25,18 +16,16 @@ interface AdminClientProps {
 
 export default function AdminClient({ initialStats }: AdminClientProps) {
   const router = useRouter();
-  const { user: storeUser, token, isAuthenticated } = useAuthStore();
+  const { user: storeUser } = useAuthStore();
   const isHydrated = useAuthHydration();
   const [days, setDays] = useState(7);
 
   const user = storeUser;
 
-  const { data: stats = initialStats, isLoading } = useQuery({
-    queryKey: ['admin-stats', days],
-    queryFn: () => api.get<AdminStats>(`/admin/stats?days=${days}`, token),
-    enabled: !!isAuthenticated && !!user && !!token,
-    initialData: initialStats && days === 7 ? initialStats : undefined,
-  });
+  const { data: stats = initialStats, isLoading } = useAdminStats(
+    days,
+    initialStats && days === 7 ? initialStats : undefined
+  );
 
   useEffect(() => {
     if (!isHydrated) {
@@ -44,7 +33,7 @@ export default function AdminClient({ initialStats }: AdminClientProps) {
       return;
     }
 
-    console.log('[Admin] Hydrated. isAuthenticated:', isAuthenticated, 'user.role:', user?.role);
+    console.log('[Admin] Hydrated. user.role:', user?.role);
 
     if (user?.role !== 'admin') {
       console.log('[Admin] User is not admin, redirecting to dashboard');

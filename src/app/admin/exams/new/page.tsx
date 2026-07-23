@@ -3,14 +3,12 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
-import { useAuthHydration } from '@/hooks/useAuthHydration';
-import api from '@/lib/api';
-import type { AdminSubjectsResponse } from '@/types';
+import { useAuthStore } from '@/presentation/stores/authStore';
+import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
+import { useAdminSubjects } from '@/presentation/hooks/use-admin-subjects';
 
-const QuestionFormModal = dynamic(() => import('@/components/admin/QuestionFormModal').then((m) => m.QuestionFormModal), {
+const QuestionFormModal = dynamic(() => import('@/presentation/components/admin/QuestionFormModal').then((m) => m.QuestionFormModal), {
   ssr: false,
   loading: () => <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center"><p className="text-sm text-slate-400">Cargando...</p></div>,
 });
@@ -18,15 +16,10 @@ const QuestionFormModal = dynamic(() => import('@/components/admin/QuestionFormM
 export default function NewQuestionPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const token = useAuthStore((s) => s.token);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
 
-  const { data: subjects = [], isLoading } = useQuery({
-    queryKey: ['admin-subjects'],
-    queryFn: () => api.get<AdminSubjectsResponse>('/admin/subjects', token),
-    enabled: !!isAuthenticated && !!user && !!token,
-  });
+  const { data: subjects = [], isLoading } = useAdminSubjects();
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -69,7 +62,6 @@ export default function NewQuestionPage() {
         subjects={subjects}
         onClose={() => router.push('/admin/exams')}
         onSuccess={() => router.push('/admin/exams')}
-        token={token}
       />
     </>
   );

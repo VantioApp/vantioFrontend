@@ -5,15 +5,12 @@ import { useRouter } from 'next/navigation';
 import { motion, useReducedMotion } from 'motion/react';
 import Link from 'next/link';
 import { Mail, Lock, User, ArrowLeft, ArrowRight } from 'lucide-react';
-import { Logo } from '@/components/ui/logo';
-import { useAuthStore } from '@/stores/authStore';
+import { Logo } from '@/presentation/components/ui/logo';
+import { useRegister } from '@/presentation/hooks/use-auth';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const register = useAuthStore((s) => s.register);
-  const isLoading = useAuthStore((s) => s.isLoading);
-  const error = useAuthStore((s) => s.error);
-  const clearError = useAuthStore((s) => s.clearError);
+  const { mutate: register, isPending, error: mutationError } = useRegister();
   const shouldReduce = useReducedMotion();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,7 +21,6 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError('');
-    clearError();
 
     if (!name.trim()) {
       setLocalError('Por favor ingresa tu nombre completo.');
@@ -43,15 +39,12 @@ export default function RegisterPage() {
       return;
     }
 
-    try {
-      await register(name, email, password);
-      router.push('/dashboard');
-    } catch (err) {
-      console.error('Registration failed:', err);
-    }
+    register({ name, email, password }, {
+      onSuccess: () => router.push('/dashboard'),
+    });
   };
 
-  const displayError = localError || error;
+  const displayError = localError || mutationError?.message;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-between font-sans text-slate-800 antialiased relative overflow-hidden">
@@ -174,10 +167,10 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isPending}
               className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 px-4 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 text-sm pt-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Creando cuenta...' : 'Registrarse'}
+              {isPending ? 'Creando cuenta...' : 'Registrarse'}
               <ArrowRight className="w-4 h-4 text-amber-400" />
             </button>
           </form>

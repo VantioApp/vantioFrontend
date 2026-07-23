@@ -5,38 +5,34 @@ import { useRouter } from 'next/navigation';
 import { motion, useReducedMotion } from 'motion/react';
 import Link from 'next/link';
 import { Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react';
-import { Logo } from '@/components/ui/logo';
-import { useAuthStore } from '@/stores/authStore';
+import { Logo } from '@/presentation/components/ui/logo';
+import { useLogin } from '@/presentation/hooks/use-auth';
+import { useAuthStore } from '@/presentation/stores/authStore';
 
 export default function LoginPage() {
   const router = useRouter();
-  const login = useAuthStore((s) => s.login);
-  const isLoading = useAuthStore((s) => s.isLoading);
-  const error = useAuthStore((s) => s.error);
-  const clearError = useAuthStore((s) => s.clearError);
+  const { mutate: login, isPending, error } = useLogin();
   const shouldReduce = useReducedMotion();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
 
     if (!email) {
       return;
     }
 
-    try {
-      await login(email, password);
-      const { user } = useAuthStore.getState();
-      if (user?.role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err) {
-      console.error('Login failed:', err);
-    }
+    login({ email, password }, {
+      onSuccess: () => {
+        const { user } = useAuthStore.getState();
+        if (user?.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
+      },
+    });
   };
 
   return (
@@ -74,9 +70,9 @@ export default function LoginPage() {
             <p className="text-sm text-slate-500 mt-1">Ingresa tus credenciales para continuar</p>
           </div>
 
-          {error && (
+          {error?.message && (
             <div className="mb-6 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg font-medium">
-              {error}
+              {error.message}
             </div>
           )}
 
@@ -129,10 +125,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isPending}
               className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 px-4 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              {isPending ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               <ArrowRight className="w-4 h-4 text-amber-400" />
             </button>
           </form>

@@ -3,16 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Search, Filter, Plus, Eye, EyeOff, Edit2, ChevronLeft, ChevronRight, Loader2,
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
-import { useAuthHydration } from '@/hooks/useAuthHydration';
-import api from '@/lib/api';
-import type { AdminQuestion, AdminQuestionsResponse, AdminSubjectsResponse } from '@/types';
+import { useAuthStore } from '@/presentation/stores/authStore';
+import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
+import { useAdminSubjects } from '@/presentation/hooks/use-admin-subjects';
+import { useAdminQuestions } from '@/presentation/hooks/use-admin-questions';
+import { useToggleQuestion } from '@/presentation/hooks/use-toggle-question';
+import type { AdminQuestion } from '@/core/interfaces';
 
-const QuestionFormModal = dynamic(() => import('@/components/admin/QuestionFormModal').then((m) => m.QuestionFormModal), {
+const QuestionFormModal = dynamic(() => import('@/presentation/components/admin/QuestionFormModal').then((m) => m.QuestionFormModal), {
   ssr: false,
   loading: () => <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-xl shadow-xl max-w-3xl w-full p-8 text-center"><p className="text-sm text-slate-400">Cargando...</p></div></div>,
 });
@@ -23,7 +25,6 @@ export default function AreaQuestionsPage() {
   const queryClient = useQueryClient();
   const area = decodeURIComponent(params.area as string);
   const user = useAuthStore((s) => s.user);
-  const token = useAuthStore((s) => s.token);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthHydration();
 
@@ -33,58 +34,25 @@ export default function AreaQuestionsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<AdminQuestion | null>(null);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const { data: subjects = [] } = useQuery({
-    queryKey: ['admin-subjects'],
-    queryFn: () => api.get<AdminSubjectsResponse>('/admin/subjects', token).then((d) => d.filter((s) => s.area === area)),
-    enabled: !!isAuthenticated && !!user && !!token,
-  });
 
-  const { data: questionsData, isLoading } = useQuery({
-    queryKey: ['admin-questions', area, page, search, subjectFilter, statusFilter],
-    queryFn: () => {
-      const queryParams = new URLSearchParams({
-        area,
-        page: page.toString(),
-        limit: '20',
-      });
-      if (search) queryParams.set('search', search);
-      if (subjectFilter) queryParams.set('subjectId', subjectFilter);
-      if (statusFilter) queryParams.set('isActive', statusFilter);
-      return api.get<AdminQuestionsResponse>(`/admin/questions?${queryParams.toString()}`, token);
-    },
-    enabled: !!isAuthenticated && !!user && !!token,
+  const { data: allSubjects = [] } = useAdminSubjects();
+  const subjects = allSubjects.filter((s) => s.area === area);
+
+  const { data: questionsData, isLoading } = useAdminQuestions({
+    area,
+    page,
+    limit: 20,
+    search: search || undefined,
+    subjectId: subjectFilter || undefined,
+    isActive: statusFilter === '' ? undefined : statusFilter === 'true',
   });
 
   const questions = questionsData?.questions ?? [];
   const totalPages = questionsData?.totalPages ?? 1;
   const total = questionsData?.total ?? 0;
 
-  const toggleMutation = useMutation({
-    mutationFn: (questionId: string) =>
-      api.patch<AdminQuestion>(`/admin/questions/${questionId}/toggle`, null, token),
-    onMutate: (questionId) => {
-      setTogglingId(questionId);
-    },
-    onSuccess: (updated) => {
-      queryClient.setQueryData<AdminQuestionsResponse>(
-        ['admin-questions', area, page, search, subjectFilter, statusFilter],
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            questions: old.questions.map((q) =>
-              q.id === updated.id ? updated : q
-            ),
-          };
-        }
-      );
-    },
-    onSettled: () => {
-      setTogglingId(null);
-    },
-  });
+  const toggleMutation = useToggleQuestion(area, page, search, subjectFilter, statusFilter);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -252,7 +220,7 @@ export default function AreaQuestionsPage() {
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => toggleMutation.mutate(question.id)}
-                        disabled={togglingId === question.id}
+                        disabled={toggleMutation.isPending && toggleMutation.variables === question.id}
                         className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
                           question.isActive
                             ? 'text-emerald-600 hover:bg-emerald-50'
@@ -260,7 +228,7 @@ export default function AreaQuestionsPage() {
                         }`}
                         title={question.isActive ? 'Desactivar' : 'Activar'}
                       >
-                        {togglingId === question.id ? (
+                        {toggleMutation.isPending && toggleMutation.variables === question.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : question.isActive ? (
                           <Eye className="w-4 h-4" />
@@ -317,7 +285,6 @@ export default function AreaQuestionsPage() {
             setEditingQuestion(null);
           }}
           onSuccess={handleFormSuccess}
-          token={token}
         />
       )}
     </>

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Award, GraduationCap } from 'lucide-react';
-import { Logo } from '@/components/ui/logo';
-import { HeroSection, FeaturesSection } from '@/components/landing/LandingClient';
+import { Logo } from '@/presentation/components/ui/logo';
+import { HeroSection, FeaturesSection } from '@/presentation/components/landing/LandingClient';
 
 export default function LandingPage() {
   return (
