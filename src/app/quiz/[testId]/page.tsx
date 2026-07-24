@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Timer, X, ArrowRight, Gavel } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
@@ -11,30 +11,32 @@ import { formatTime } from '@/core/utils/format-time';
 export default function QuizPage() {
   const router = useRouter();
   const { mutate: submitQuiz } = useSubmitQuiz();
-  const timerRef = useRef<HTMLSpanElement>(null);
-  const timerContainerRef = useRef<HTMLDivElement>(null);
-  const timerIconRef = useRef<SVGSVGElement>(null);
   const questions = useQuizStore((s) => s.questions);
   const currentQuestionIndex = useQuizStore((s) => s.currentQuestionIndex);
   const selectedOptionIndex = useQuizStore((s) => s.selectedOptionIndex);
   const isActive = useQuizStore((s) => s.isActive);
   const isFinished = useQuizStore((s) => s.isFinished);
+  const timeLeft = useQuizStore((s) => s.timeLeft);
   const selectOption = useQuizStore((s) => s.selectOption);
   const nextQuestion = useQuizStore((s) => s.nextQuestion);
   const tickTimer = useQuizStore((s) => s.tickTimer);
-  const testId = useQuizStore((s) => s.testId);
-  const answers = useQuizStore((s) => s.answers);
 
   const handleFinishQuiz = useCallback(() => {
-    if (!testId) return;
-    const submitAnswers = answers.map((a) => ({
-      testQuestionId: a.questionId,
-      selectedAnswer: questions.find((q) => q.id === a.questionId)?.options[a.selectedIndex]?.label || '',
-    }));
-    submitQuiz({ testId, answers: submitAnswers }, {
-      onSuccess: () => router.push(`/quiz/${testId}/results`),
+    const { testId: currentTestId, answers: currentAnswers } = useQuizStore.getState();
+    if (!currentTestId) return;
+    const submitAnswers = currentAnswers
+      .filter((a) => a.selectedLabel)
+      .map((a) => ({
+        testQuestionId: a.testQuestionId,
+        selectedAnswer: a.selectedLabel,
+      }));
+    
+    if (submitAnswers.length === 0) return;
+    
+    submitQuiz({ testId: currentTestId, answers: submitAnswers }, {
+      onSuccess: () => router.push(`/quiz/${currentTestId}/results`),
     });
-  }, [testId, answers, questions, submitQuiz, router]);
+  }, [submitQuiz, router]);
 
   const handleNextQuestion = useCallback(() => {
     const isLastQuestion = currentQuestionIndex + 1 >= questions.length;
@@ -47,53 +49,18 @@ export default function QuizPage() {
   useEffect(() => {
     if (!isActive || isFinished) return;
 
-    const timerContainer = timerContainerRef.current;
-    const timerSpan = timerRef.current;
-    const timerIcon = timerIconRef.current;
-    const initialTime = useQuizStore.getState().timeLeft;
-
-    if (timerSpan) {
-      timerSpan.textContent = formatTime(initialTime);
-    }
-    if (timerContainer && initialTime <= 300) {
-      timerContainer.className = timerContainer.className
-        .replace(/bg-slate-50 border-slate-200 text-slate-700/g, '')
-        + ' bg-rose-50 border-rose-200 text-rose-600 animate-pulse';
-      if (timerIcon) {
-        timerIcon.classList.add('text-rose-500');
-        timerIcon.classList.remove('text-amber-600');
-      }
-    }
-
     const interval = setInterval(() => {
       tickTimer();
-      const newTime = useQuizStore.getState().timeLeft;
-
-      if (timerSpan) {
-        timerSpan.textContent = formatTime(newTime);
-      }
-
-      if (timerContainer) {
-        const isCritical = newTime <= 300;
-        const isCurrentlyCritical = timerContainer.classList.contains('bg-rose-50');
-        if (isCritical && !isCurrentlyCritical) {
-          timerContainer.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-600', 'animate-pulse');
-          timerContainer.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
-          if (timerIcon) {
-            timerIcon.classList.add('text-rose-500');
-            timerIcon.classList.remove('text-amber-600');
-          }
-        }
-      }
-
-      if (newTime <= 0) {
-        clearInterval(interval);
-        handleFinishQuiz();
-      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, isFinished, tickTimer, handleFinishQuiz]);
+  }, [isActive, isFinished, tickTimer]);
+
+  useEffect(() => {
+    if (timeLeft <= 0 && isActive) {
+      handleFinishQuiz();
+    }
+  }, [timeLeft, isActive, handleFinishQuiz]);
 
   if (questions.length === 0) {
     return (
@@ -105,8 +72,7 @@ export default function QuizPage() {
 
   const currentQuestion = questions[currentQuestionIndex];
   const progressPercent = Math.round(((currentQuestionIndex + 1) / questions.length) * 100);
-  const initialTimeLeft = useQuizStore.getState().timeLeft;
-  const isTimeCritical = initialTimeLeft <= 300;
+  const isTimeCritical = timeLeft <= 300;
   const optionLetters = ['A', 'B', 'C', 'D'];
 
   const handleCancelQuiz = () => {
@@ -135,13 +101,12 @@ export default function QuizPage() {
           </div>
 
           <div 
-            ref={timerContainerRef} 
             className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${
               isTimeCritical ? 'bg-rose-50 border-rose-200 text-rose-600 animate-pulse' : 'bg-slate-50 border-slate-200 text-slate-700'
             }`}
           >
-            <Timer ref={timerIconRef} className={`w-4 h-4 ${isTimeCritical ? 'text-rose-500' : 'text-amber-600'}`} />
-            <span ref={timerRef} className="font-mono text-sm font-bold tabular-nums">{formatTime(initialTimeLeft)}</span>
+            <Timer className={`w-4 h-4 ${isTimeCritical ? 'text-rose-500' : 'text-amber-600'}`} />
+            <span className="font-mono text-sm font-bold tabular-nums">{formatTime(timeLeft)}</span>
           </div>
         </div>
       </header>
@@ -171,7 +136,7 @@ export default function QuizPage() {
                 <button
                   key={idx}
                   onClick={() => selectOption(idx)}
-                  className={`w-full text-left rounded-lg p-4 flex items-start gap-4 transition-all duration-200 group relative border focus:outline-none ${
+                  className={`w-full text-left rounded-lg p-4 flex items-start gap-4 transition-all duration-200 group relative border focus:outline-none cursor-pointer ${
                     isSelected
                       ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
                       : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
@@ -194,7 +159,7 @@ export default function QuizPage() {
         <div className="flex justify-between items-center gap-4 w-full">
           <button
             onClick={handleCancelQuiz}
-            className="inline-flex items-center gap-1.5 px-5 py-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-500 hover:text-rose-600 hover:border-rose-200 bg-white transition-all active:scale-95 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-5 py-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-500 hover:text-rose-600 hover:border-rose-200 bg-white transition-all active:scale-95 shadow-xs cursor-pointer"
           >
             <X className="w-4 h-4" />
             Finalizar Prueba
@@ -206,7 +171,7 @@ export default function QuizPage() {
             className={`inline-flex items-center gap-2 px-6 py-3.5 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm ${
               selectedOptionIndex === null
                 ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-200'
-                : 'bg-slate-900 hover:bg-slate-800 text-white border border-slate-950 hover:shadow-md'
+                : 'bg-slate-900 hover:bg-slate-800 text-white border border-slate-950 hover:shadow-md cursor-pointer'
             }`}
           >
             {currentQuestionIndex + 1 === questions.length ? 'Finalizar Prueba' : 'Siguiente Pregunta'}

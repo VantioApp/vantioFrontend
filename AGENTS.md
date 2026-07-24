@@ -224,6 +224,7 @@ export type { QuizStats } from './quiz/quiz';
 - **Accesibilidad**: Usar elementos semánticos (`<button>`, `<nav>`, `<main>`)
 - **Imágenes**: Siempre usar `next/image` para optimización
 - **Imports**: Usar path aliases (`@/`, `@core/`, `@presentation/`)
+- **Cursor pointer obligatorio**: Todos los elementos interactivos (`<button>`, `<Link>`, `<a>` con handler, `<tr>` clickeable, elementos de navegación) DEBEN incluir `cursor-pointer` en su className. Esto mejora la affordance y la UX. Excepción: botones en estado `disabled` usan `disabled:cursor-not-allowed`.
 
 ### Reglas Importantes
 

@@ -7,19 +7,25 @@ export interface QuestionOption {
 
 export interface Question {
   id: string;
+  testQuestionId: string;
+  order: number;
   statement: string;
   options: QuestionOption[];
   correctAnswers: string[];
   category: string;
-  explanation: string;
+  explanation?: string;
   isActive?: boolean;
   subjectId?: string;
   subject?: Subject;
+  themeName?: string;
+  subjectName?: string;
 }
 
 export interface QuizAnswer {
   questionId: string;
+  testQuestionId: string;
   selectedIndex: number;
+  selectedLabel: string;
   isCorrect: boolean;
 }
 
@@ -43,6 +49,15 @@ export interface TestHistoryItem {
   passed: boolean;
   startedAt: string;
   finishedAt: string;
+  area: string;
+}
+
+export interface PaginatedHistory {
+  items: TestHistoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface GenerateQuizRequest {
@@ -73,13 +88,67 @@ export interface SubmitQuizResponse {
   correctCount: number;
 }
 
-export interface TestResultQuestion extends Question {
-  explanation: string;
+export interface TestResultQuestionRaw {
+  id: string;
+  order: number;
+  text: string;
+  options: QuestionOption[];
+  selectedAnswer: string | null;
+  correctAnswers: string[];
+  isCorrect: boolean | null;
+  explanation: string | null;
+  themeName: string | null;
+  subjectName: string;
+}
+
+export interface ThemeAnalysisItem {
+  themeId: string;
+  themeName: string;
+  subjectId: string;
+  subjectName: string;
+  correct: number;
+  total: number;
+  pct: number;
+}
+
+export interface ClassifiedTheme {
+  themeId: string;
+  name: string;
+  subjectName: string;
+  pct: number;
+  correct: number;
+  total: number;
+}
+
+export interface StudyResource {
+  id: string;
+  title: string;
+  type: 'doctrina' | 'jurisprudencia' | 'ley' | 'articulo';
+  citation: string | null;
+  description: string | null;
+  url: string | null;
+  themeName: string | null;
+  subjectName: string;
+}
+
+export interface TestFeedback {
+  id: string;
+  themeAnalysis: ThemeAnalysisItem[];
+  weakThemes: ClassifiedTheme[];
+  strongThemes: ClassifiedTheme[];
+  recommendation: string | null;
+  studyResources: StudyResource[];
+  createdAt: string;
 }
 
 export interface TestResultsResponse {
   testId: string;
+  totalQuestions: number;
+  correctCount: number;
   score: number;
   passed: boolean;
-  questions: TestResultQuestion[];
+  startedAt: string;
+  finishedAt: string;
+  questions: TestResultQuestionRaw[];
+  feedback: TestFeedback | null;
 }

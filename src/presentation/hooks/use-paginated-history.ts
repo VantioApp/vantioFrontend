@@ -3,11 +3,16 @@ import { getQuizHistoryAction } from '@/core/actions/quiz/quiz-actions';
 import { useAuthStore } from '@/presentation/stores/authStore';
 import type { PaginatedHistory } from '@/core/interfaces/quiz/quiz';
 
-export function useQuizHistory(userId: string | undefined, initialData?: PaginatedHistory) {
+export function usePaginatedHistory(
+  userId: string | undefined,
+  page: number = 1,
+  limit: number = 20,
+  initialData?: PaginatedHistory
+) {
   const token = useAuthStore((s) => s.token);
   return useQuery({
-    queryKey: ['quiz-history', userId],
-    queryFn: () => getQuizHistoryAction(userId!, token!),
+    queryKey: ['quiz-history', userId, page, limit],
+    queryFn: () => getQuizHistoryAction(userId!, token!, { page, limit }),
     enabled: !!userId && !!token,
     initialData,
     staleTime: 2 * 60 * 1000,

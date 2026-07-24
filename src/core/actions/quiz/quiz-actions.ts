@@ -5,7 +5,7 @@ import type {
   SubmitQuizRequest,
   SubmitQuizResponse,
   TestResultsResponse,
-  TestHistoryItem,
+  PaginatedHistory,
 } from '@/core/interfaces';
 
 export const generateQuizAction = async (
@@ -31,10 +31,10 @@ export const getQuizHistoryAction = async (
   userId: string,
   token: string,
   params?: { page?: number; limit?: number }
-): Promise<TestHistoryItem[]> => {
+): Promise<PaginatedHistory> => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.set('page', params.page.toString());
   if (params?.limit) queryParams.set('limit', params.limit.toString());
   const query = queryParams.toString();
-  return api.get<TestHistoryItem[]>(`/quiz/history/${userId}${query ? `?${query}` : ''}`, token);
+  return api.get<PaginatedHistory>(`/quiz/history/${userId}${query ? `?${query}` : ''}`, token);
 };

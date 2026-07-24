@@ -1,31 +1,38 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { 
   CheckCircle, AlertTriangle, Gavel, RefreshCw, 
-  ChevronRight, BookOpen, Award
+  ChevronRight, BookOpen, Award, Loader2
 } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
 import { useQuizStore } from '@/presentation/stores/quizStore';
 import { useProfile } from '@/presentation/hooks/use-profile';
-import type { Question } from '@/core/interfaces';
+import { useQuizResults } from '@/presentation/hooks/use-quiz-results';
+import PlanRefuerzo from '@/presentation/components/quiz/PlanRefuerzo';
+import PerformancePolarChart from '@/presentation/components/quiz/PerformancePolarChart';
+import type { Question, TestResultsResponse } from '@/core/interfaces';
+
+const optionLetters = ['A', 'B', 'C', 'D'];
 
 const QuestionReviewCard = React.memo(function QuestionReviewCard({
   question,
-  answerObj,
+  selectedAnswer,
+  isCorrect,
   qIdx,
 }: {
   question: Question;
-  answerObj: { questionId: string; selectedIndex: number; isCorrect: boolean } | undefined;
+  selectedAnswer: string | null;
+  isCorrect: boolean | null;
   qIdx: number;
 }) {
-  const studentAnswerIdx = answerObj ? answerObj.selectedIndex : null;
-  const isCorrect = answerObj ? answerObj.isCorrect : false;
-  const optionLetters = ['A', 'B', 'C', 'D'];
+  const studentAnswerIdx = selectedAnswer
+    ? question.options.findIndex((o) => o.label === selectedAnswer)
+    : null;
 
   return (
     <div 
@@ -41,10 +48,17 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
           Pregunta {qIdx + 1}
         </span>
-        <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
-          <Gavel className="w-3.5 h-3.5 text-amber-600" />
-          {question.category}
-        </span>
+        <div className="flex items-center gap-2">
+          {question.themeName && (
+            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+              {question.themeName}
+            </span>
+          )}
+          <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+            <Gavel className="w-3.5 h-3.5 text-amber-600" />
+            {question.category}
+          </span>
+        </div>
       </div>
 
       <h3 className="font-serif text-lg text-slate-900 font-bold leading-normal">
@@ -90,27 +104,45 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
         })}
       </div>
 
-      <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
-        <p className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
-          <BookOpen className="w-4 h-4 text-amber-600" />
-          Fundamento Jurídico Doctrinal
-        </p>
-        <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
-          {question.explanation}
-        </p>
-      </div>
+      {question.explanation && (
+        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
+          <p className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+            <BookOpen className="w-4 h-4 text-amber-600" />
+            Fundamento Jurídico
+          </p>
+          <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+            {question.explanation}
+          </p>
+        </div>
+      )}
     </div>
   );
 });
 
+function mapBackendQuestion(q: TestResultsResponse['questions'][0]): Question {
+  return {
+    id: q.id || `q-${q.order}`,
+    testQuestionId: q.id || `q-${q.order}`,
+    order: q.order,
+    statement: q.text,
+    options: q.options,
+    correctAnswers: q.correctAnswers,
+    category: q.subjectName || '',
+    explanation: q.explanation || undefined,
+    themeName: q.themeName || undefined,
+    subjectName: q.subjectName,
+  };
+}
+
 export default function QuizResultsPage() {
   const router = useRouter();
+  const params = useParams();
+  const testId = params.testId as string;
   const shouldReduce = useReducedMotion();
   const { data: user } = useProfile();
-  const questions = useQuizStore((s) => s.questions);
-  const score = useQuizStore((s) => s.score);
-  const answers = useQuizStore((s) => s.answers);
   const resetQuiz = useQuizStore((s) => s.resetQuiz);
+
+  const { data: resultsData, isLoading: isLoadingResults } = useQuizResults(testId);
 
   useEffect(() => {
     if (!user) {
@@ -118,14 +150,33 @@ export default function QuizResultsPage() {
     }
   }, [user, router]);
 
-  const totalQuestions = questions.length || 10;
-  const scorePercent = Math.round((score / totalQuestions) * 100);
-  const isPassed = scorePercent >= 70;
+  const questions: Question[] = useMemo(() => {
+    if (resultsData?.questions) {
+      return resultsData.questions.map(mapBackendQuestion);
+    }
+    return [];
+  }, [resultsData]);
+
+  const totalQuestions = resultsData?.totalQuestions || questions.length || 10;
+  const correctCount = resultsData?.correctCount || 0;
+  const scorePercent = resultsData?.score ?? (questions.length > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0);
+  const isPassed = resultsData?.passed ?? scorePercent >= 70;
 
   const handleRetry = () => {
     resetQuiz();
     router.push('/dashboard');
   };
+
+  const feedback = resultsData?.feedback || null;
+
+  if (isLoadingResults) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-800 antialiased items-center justify-center">
+        <Loader2 className="w-10 h-10 text-slate-400 animate-spin mb-4" />
+        <p className="text-slate-500 text-sm">Cargando resultados de la prueba...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-800 antialiased justify-between">
@@ -166,7 +217,7 @@ export default function QuizResultsPage() {
             <p className="text-slate-500 text-sm mt-1 max-w-md mx-auto">
               {isPassed 
                 ? 'Excelente nivel. Cuentas con fundamentos sólidos para enfrentar tu examen preparatorio con confianza.' 
-                : 'Te recomendamos revisar la jurisprudencia y doctrina sugeridas en las explicaciones de las respuestas incorrectas.'
+                : 'Revisa el plan de refuerzo y los recursos sugeridos para fortalecer los temas donde fallaste.'
               }
             </p>
           </div>
@@ -174,13 +225,13 @@ export default function QuizResultsPage() {
           <div className="my-4 flex items-center gap-6 bg-slate-50 border border-slate-200/60 p-4 rounded-xl w-full max-w-sm justify-around">
             <div className="text-center">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aciertos</p>
-              <p className="text-3xl font-serif font-bold text-slate-900 mt-0.5">{score} / {totalQuestions}</p>
+              <p className="text-3xl font-serif font-bold text-slate-900 mt-0.5">{correctCount} / {totalQuestions}</p>
             </div>
             <div className="w-px h-10 bg-slate-200" />
             <div className="text-center">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Nota Porcentual</p>
               <p className={`text-3xl font-serif font-bold mt-0.5 ${isPassed ? 'text-emerald-600' : 'text-rose-600'}`}>
-                {scorePercent}%
+                {Math.round(scorePercent)}%
               </p>
             </div>
           </div>
@@ -188,20 +239,33 @@ export default function QuizResultsPage() {
           <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
             <Link
               href="/dashboard"
-              className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               Volver al Dashboard
               <ChevronRight className="w-4 h-4 text-amber-400" />
             </Link>
             <button
               onClick={handleRetry}
-              className="flex-1 border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-800 font-semibold py-3 px-4 rounded-lg text-sm shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-800 font-semibold py-3 px-4 rounded-lg text-sm shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <RefreshCw className="w-4 h-4 text-amber-600" />
               Repetir Simulacro
             </button>
           </div>
         </motion.div>
+
+        {feedback ? (
+          <>
+            <div>
+              <h2 className="font-serif text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <BookOpen className="w-5.5 h-5.5 text-amber-600" />
+                Plan de Refuerzo Personalizado
+              </h2>
+              <PlanRefuerzo feedback={feedback} />
+            </div>
+            <PerformancePolarChart themeAnalysis={feedback.themeAnalysis} />
+          </>
+        ) : null}
 
         <div>
           <h2 className="font-serif text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
@@ -211,12 +275,13 @@ export default function QuizResultsPage() {
 
           <div className="flex flex-col gap-6 content-visibility-auto">
             {questions.map((question, qIdx) => {
-              const answerObj = answers.find(a => a.questionId === question.id);
+              const backendQ = resultsData?.questions[qIdx];
               return (
                 <QuestionReviewCard
-                  key={question.id}
+                  key={question.id || qIdx}
                   question={question}
-                  answerObj={answerObj}
+                  selectedAnswer={backendQ?.selectedAnswer || null}
+                  isCorrect={backendQ?.isCorrect || null}
                   qIdx={qIdx}
                 />
               );

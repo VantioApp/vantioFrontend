@@ -10,5 +10,7 @@ export function useQuizResults(testId: string | null, initialData?: TestResultsR
     queryFn: () => getQuizResultsAction(testId!, token!),
     enabled: !!testId && !!token,
     initialData,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }

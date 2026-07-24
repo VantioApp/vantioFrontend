@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role: 'student' | 'admin';
   avatarUrl?: string | null;
+  enrolledAreas: string[];
   createdAt: string;
 }
 

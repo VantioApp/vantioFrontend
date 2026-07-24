@@ -1,7 +1,34 @@
 'use client';
 
 import { useState } from 'react';
+import { z } from 'zod';
 import { useImportQuestions } from '@/presentation/hooks/use-import-questions';
+import type { ImportQuestionsData } from '@/core/interfaces';
+
+const questionOptionSchema = z.object({
+  label: z.string().regex(/^[A-D]$/),
+  text: z.string().min(1),
+});
+
+const questionSchema = z.object({
+  id: z.string().min(1),
+  number: z.number().int().positive(),
+  text: z.string().min(1),
+  options: z.array(questionOptionSchema).length(4),
+  correctAnswer: z.string().regex(/^[A-D]$/),
+  theme: z.string().nullable().optional(),
+  explanation: z.string().optional(),
+  needsReview: z.boolean().optional(),
+});
+
+const importJsonSchema = z.object({
+  subject: z.string().min(1),
+  area: z.string().min(1),
+  sourcePdf: z.string().default(''),
+  pageRange: z.string().default(''),
+  totalQuestions: z.number().int().positive().optional(),
+  questions: z.array(questionSchema).min(1),
+});
 
 interface ImportJsonModalProps {
   onClose: () => void;
@@ -30,8 +57,14 @@ export default function ImportJsonModal({
   const handleSubmit = () => {
     try {
       setValidationError('');
-      const data = JSON.parse(jsonContent);
-      importQuestions(data, { onSuccess: () => onSuccess() });
+      const parsed = JSON.parse(jsonContent);
+      const result = importJsonSchema.safeParse(parsed);
+      if (!result.success) {
+        const errors = result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
+        setValidationError(`JSON invalido: ${errors}`);
+        return;
+      }
+      importQuestions(result.data as ImportQuestionsData, { onSuccess: () => onSuccess() });
     } catch (err) {
       setValidationError(err instanceof Error ? err.message : 'Error al parsear JSON');
     }

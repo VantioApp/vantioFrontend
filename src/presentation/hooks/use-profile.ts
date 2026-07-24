@@ -10,5 +10,7 @@ export function useProfile(initialData?: User) {
     queryFn: () => getProfileAction(token!),
     enabled: !!token,
     initialData,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }

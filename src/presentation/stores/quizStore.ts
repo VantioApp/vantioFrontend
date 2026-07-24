@@ -51,7 +51,13 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     const isCorrect = currentQuestion.correctAnswers.includes(selectedLabel);
     const nextAnswers = [
       ...answers,
-      { questionId: currentQuestion.id, selectedIndex: selectedOptionIndex, isCorrect },
+      {
+        questionId: currentQuestion.id,
+        testQuestionId: currentQuestion.testQuestionId,
+        selectedIndex: selectedOptionIndex,
+        selectedLabel,
+        isCorrect,
+      },
     ];
     const nextScore = isCorrect ? score + 1 : score;
 

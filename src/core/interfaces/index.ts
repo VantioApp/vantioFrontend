@@ -8,13 +8,18 @@ export type {
   QuizAnswer,
   QuizState,
   TestHistoryItem,
+  PaginatedHistory,
   GenerateQuizRequest,
   GenerateQuizResponse,
   QuizAnswerItem,
   SubmitQuizRequest,
   SubmitQuizResponse,
-  TestResultQuestion,
+  TestResultQuestionRaw,
   TestResultsResponse,
+  ThemeAnalysisItem,
+  ClassifiedTheme,
+  StudyResource,
+  TestFeedback,
 } from './quiz/quiz';
 
 // Admin
@@ -31,6 +36,8 @@ export type {
   ImportQuestionsData,
   ImportResult,
   QuizAttempt,
+  AvailableArea,
+  MyEnrollments,
 } from './admin/admin';
 
 // Questions

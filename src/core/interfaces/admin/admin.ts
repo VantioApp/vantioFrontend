@@ -20,6 +20,8 @@ export interface AdminUser {
   totalTests: number;
   averageScore: number;
   lastTestDate: Date | null;
+  enrolledAreas: string[];
+  enrolledAreasCount: number;
 }
 
 export interface AdminUsersResponse {
@@ -109,4 +111,14 @@ export interface QuizAttempt {
   score: number;
   totalQuestions: number;
   status: 'Aprobado' | 'Requiere refuerzo';
+}
+
+export interface AvailableArea {
+  area: string;
+  subjectCount: number;
+  totalQuestions: number;
+}
+
+export interface MyEnrollments {
+  enrolledAreas: string[];
 }

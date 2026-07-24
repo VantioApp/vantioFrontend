@@ -4,7 +4,8 @@ import { useAuthStore } from '@/presentation/stores/authStore';
 import type { AuthResponse } from '@/core/interfaces/auth/auth';
 
 function setAuthCookies(token: string) {
-  const cookieOpts = 'path=/; max-age=604800; SameSite=Lax';
+  const isProduction = process.env.NODE_ENV === 'production';
+  const cookieOpts = `path=/; max-age=604800; SameSite=Lax${isProduction ? '; Secure' : ''}`;
   document.cookie = `access_token=${token}; ${cookieOpts}`;
   document.cookie = `vantio_token=${token}; ${cookieOpts}`;
 }

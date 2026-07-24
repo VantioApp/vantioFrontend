@@ -24,7 +24,6 @@ export const useAuthStore = create<AuthStore>()(
       name: 'vantio-auth',
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
     }
