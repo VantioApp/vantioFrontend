@@ -26,6 +26,7 @@ export type {
 export type {
   AdminStats,
   AdminUser,
+  AdminUserDetails,
   AdminUsersResponse,
   AdminSubject,
   AdminSubjectsResponse,
@@ -38,6 +39,8 @@ export type {
   QuizAttempt,
   AvailableArea,
   MyEnrollments,
+  UserTestHistoryItem,
+  UserTestsResponse,
 } from './admin/admin';
 
 // Questions

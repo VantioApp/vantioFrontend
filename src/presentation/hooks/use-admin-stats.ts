@@ -10,5 +10,7 @@ export function useAdminStats(days: number = 7, initialData?: AdminStats) {
     queryFn: () => getAdminStatsAction(days, token!),
     enabled: !!token,
     initialData,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }

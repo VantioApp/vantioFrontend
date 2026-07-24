@@ -24,6 +24,30 @@ export interface AdminUser {
   enrolledAreasCount: number;
 }
 
+export interface AdminUserDetails extends AdminUser {
+  updatedAt: Date;
+  lastTestScore: number | null;
+}
+
+export interface UserTestHistoryItem {
+  id: string;
+  totalQuestions: number;
+  correctCount: number;
+  score: number;
+  passed: boolean;
+  startedAt: string;
+  finishedAt: string | null;
+  area: string;
+}
+
+export interface UserTestsResponse {
+  items: UserTestHistoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface AdminUsersResponse {
   users: AdminUser[];
   total: number;

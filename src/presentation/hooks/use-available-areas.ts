@@ -9,5 +9,7 @@ export function useAvailableAreas(): { data: AvailableArea[] | undefined } {
     queryKey: ['available-areas'],
     queryFn: () => getAvailableAreasAction(token!),
     enabled: !!token,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }

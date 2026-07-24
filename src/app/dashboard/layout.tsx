@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
 import { useAuthStore } from '@/presentation/stores/authStore';
+import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -19,22 +20,24 @@ const navItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const isHydrated = useAuthHydration();
   const user = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isHydrated, isAuthenticated, router]);
 
   const handleLogout = () => {
     clearAuth();
     router.push('/');
   };
 
-  if (!user) return null;
+  if (!isHydrated || !user) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800 antialiased">
@@ -79,12 +82,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       <main className="flex-grow flex flex-col min-w-0 overflow-y-auto md:ml-64">
-        <header className="md:hidden bg-white border-b border-slate-200 h-16 px-6 flex items-center justify-between sticky top-0 z-30">
+        <header className="md:hidden bg-slate-900 border-b border-slate-800 h-16 px-6 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-2">
             <Logo variant="isotype" theme="dark" height={28} />
-            <span className="font-serif font-bold text-slate-900 text-lg">Vantio</span>
+            <span className="font-serif font-bold text-white text-lg">Vantio</span>
           </div>
-          <button onClick={handleLogout} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer">
+          <button onClick={handleLogout} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg cursor-pointer">
             <LogOut className="w-5 h-5" />
           </button>
         </header>

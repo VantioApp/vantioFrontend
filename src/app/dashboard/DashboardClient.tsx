@@ -81,20 +81,6 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
         </div>
 
         <div className="lg:col-span-2 flex flex-col gap-6">
-          <div className="bg-amber-600 text-white rounded-xl p-8 flex flex-col sm:flex-row items-center justify-between shadow-sm relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white to-transparent pointer-events-none"></div>
-            <div className="z-10 text-center sm:text-left mb-4 sm:mb-0">
-              <h3 className="font-serif text-2xl md:text-3xl font-bold">Preparación Intensiva</h3>
-              <p className="text-sm opacity-90 mt-2 max-w-md">Continúa tu preparación para el examen final con una nueva prueba de simulación completa.</p>
-            </div>
-            <a
-              href="#areas"
-              className="z-10 bg-white text-amber-700 px-6 py-3 rounded-lg text-sm font-bold hover:bg-opacity-95 shadow-sm transition-all hover:scale-105 active:scale-95 whitespace-nowrap cursor-pointer"
-            >
-              Iniciar Nueva Prueba
-            </a>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 bg-slate-100 text-slate-900 rounded-lg flex items-center justify-center">

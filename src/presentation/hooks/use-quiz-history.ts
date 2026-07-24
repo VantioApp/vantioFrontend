@@ -10,7 +10,7 @@ export function useQuizHistory(userId: string | undefined, initialData?: Paginat
     queryFn: () => getQuizHistoryAction(userId!, token!),
     enabled: !!userId && !!token,
     initialData,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 15 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }

@@ -5,6 +5,9 @@ import type {
   AdminSubject,
   AdminQuestionsResponse,
   AdminQuestion,
+  AdminUserDetails,
+  UserTestsResponse,
+  TestResultsResponse,
   CreateQuestionData,
   UpdateQuestionData,
   ImportQuestionsData,
@@ -24,6 +27,29 @@ export const getAdminUsersAction = async (
   if (params.page) queryParams.set('page', params.page.toString());
   if (params.limit) queryParams.set('limit', params.limit.toString());
   return api.get<AdminUsersResponse>(`/admin/users?${queryParams.toString()}`, token);
+};
+
+export const getAdminUserDetailsAction = async (userId: string, token: string): Promise<AdminUserDetails> => {
+  return api.get<AdminUserDetails>(`/admin/users/${userId}`, token);
+};
+
+export const getAdminUserTestsAction = async (
+  userId: string,
+  params: { page?: number; limit?: number },
+  token: string
+): Promise<UserTestsResponse> => {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.set('page', params.page.toString());
+  if (params.limit) queryParams.set('limit', params.limit.toString());
+  const query = queryParams.toString();
+  return api.get<UserTestsResponse>(
+    `/admin/users/${userId}/tests${query ? `?${query}` : ''}`,
+    token,
+  );
+};
+
+export const getAdminTestResultsAction = async (testId: string, token: string): Promise<TestResultsResponse> => {
+  return api.get<TestResultsResponse>(`/admin/tests/${testId}`, token);
 };
 
 export const getAdminSubjectsAction = async (token: string): Promise<AdminSubject[]> => {

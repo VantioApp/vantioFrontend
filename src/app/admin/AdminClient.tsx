@@ -16,11 +16,9 @@ interface AdminClientProps {
 
 export default function AdminClient({ initialStats }: AdminClientProps) {
   const router = useRouter();
-  const { user: storeUser } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthHydration();
   const [days, setDays] = useState(7);
-
-  const user = storeUser;
 
   const { data: stats = initialStats, isLoading } = useAdminStats(
     days,
@@ -29,17 +27,12 @@ export default function AdminClient({ initialStats }: AdminClientProps) {
 
   useEffect(() => {
     if (!isHydrated) {
-      console.log('[Admin] Waiting for hydration...');
       return;
     }
 
-    console.log('[Admin] Hydrated. user.role:', user?.role);
-
     if (user?.role !== 'admin') {
-      console.log('[Admin] User is not admin, redirecting to dashboard');
       router.push('/dashboard');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated, user, router]);
 
   if (!user) return null;
@@ -72,17 +65,6 @@ export default function AdminClient({ initialStats }: AdminClientProps) {
         </div>
 
         <div className="lg:col-span-2 flex flex-col gap-6">
-          <div className="bg-amber-600 text-white rounded-xl p-8 flex flex-col sm:flex-row items-center justify-between shadow-sm relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white to-transparent pointer-events-none"></div>
-            <div className="z-10 text-center sm:text-left mb-4 sm:mb-0">
-              <h3 className="font-serif text-2xl md:text-3xl font-bold">Preparacion Intensiva</h3>
-              <p className="text-sm opacity-90 mt-2 max-w-md">Continua tu preparacion para el examen final con una nueva prueba de simulacion completa.</p>
-            </div>
-            <button className="z-10 bg-white text-amber-700 px-6 py-3 rounded-lg text-sm font-bold hover:bg-opacity-95 shadow-sm transition-all hover:scale-105 active:scale-95 whitespace-nowrap">
-              Iniciar Nueva Prueba
-            </button>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 bg-slate-100 text-slate-900 rounded-lg flex items-center justify-center">

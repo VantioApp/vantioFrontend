@@ -10,5 +10,7 @@ export function useAdminSubjects(initialData?: AdminSubject[]) {
     queryFn: () => getAdminSubjectsAction(token!),
     enabled: !!token,
     initialData,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }

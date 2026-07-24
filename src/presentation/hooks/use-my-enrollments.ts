@@ -9,5 +9,7 @@ export function useMyEnrollments(): { data: MyEnrollments | undefined } {
     queryKey: ['my-enrollments'],
     queryFn: () => getMyEnrollmentsAction(token!),
     enabled: !!token,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }

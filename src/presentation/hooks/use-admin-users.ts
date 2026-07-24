@@ -10,5 +10,7 @@ export function useAdminUsers(
     queryKey: ['admin-users', params.page, params.search],
     queryFn: () => getAdminUsersAction(params, token!),
     enabled: !!token,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 }
