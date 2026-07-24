@@ -43,12 +43,11 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   },
 
   nextQuestion: () => {
-    const { questions, currentQuestionIndex, selectedOptionIndex, answers, score } = get();
+    const { questions, currentQuestionIndex, selectedOptionIndex, answers } = get();
     if (selectedOptionIndex === null) return;
 
     const currentQuestion = questions[currentQuestionIndex];
     const selectedLabel = currentQuestion.options[selectedOptionIndex].label;
-    const isCorrect = currentQuestion.correctAnswers.includes(selectedLabel);
     const nextAnswers = [
       ...answers,
       {
@@ -56,22 +55,19 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
         testQuestionId: currentQuestion.testQuestionId,
         selectedIndex: selectedOptionIndex,
         selectedLabel,
-        isCorrect,
+        isCorrect: null,
       },
     ];
-    const nextScore = isCorrect ? score + 1 : score;
 
     if (currentQuestionIndex + 1 < questions.length) {
       set({
         currentQuestionIndex: currentQuestionIndex + 1,
         selectedOptionIndex: null,
         answers: nextAnswers,
-        score: nextScore,
       });
     } else {
       set({
         answers: nextAnswers,
-        score: nextScore,
         isFinished: true,
         isActive: false,
       });

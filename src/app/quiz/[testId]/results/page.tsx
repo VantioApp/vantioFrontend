@@ -15,7 +15,7 @@ import { useProfile } from '@/presentation/hooks/use-profile';
 import { useQuizResults } from '@/presentation/hooks/use-quiz-results';
 import PlanRefuerzo from '@/presentation/components/quiz/PlanRefuerzo';
 import PerformancePolarChart from '@/presentation/components/quiz/PerformancePolarChart';
-import type { Question, TestResultsResponse } from '@/core/interfaces';
+import type { TestResultQuestionRaw, TestResultsResponse } from '@/core/interfaces';
 
 const optionLetters = ['A', 'B', 'C', 'D'];
 
@@ -25,7 +25,7 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
   isCorrect,
   qIdx,
 }: {
-  question: Question;
+  question: TestResultQuestionRaw;
   selectedAnswer: string | null;
   isCorrect: boolean | null;
   qIdx: number;
@@ -56,13 +56,13 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
           )}
           <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
             <Gavel className="w-3.5 h-3.5 text-amber-600" />
-            {question.category}
+            {question.subjectName}
           </span>
         </div>
       </div>
 
       <h3 className="font-serif text-lg text-slate-900 font-bold leading-normal">
-        {question.statement}
+        {question.text}
       </h3>
 
       <div className="flex flex-col gap-2 pt-2">
@@ -119,21 +119,6 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
   );
 });
 
-function mapBackendQuestion(q: TestResultsResponse['questions'][0]): Question {
-  return {
-    id: q.id || `q-${q.order}`,
-    testQuestionId: q.id || `q-${q.order}`,
-    order: q.order,
-    statement: q.text,
-    options: q.options,
-    correctAnswers: q.correctAnswers,
-    category: q.subjectName || '',
-    explanation: q.explanation || undefined,
-    themeName: q.themeName || undefined,
-    subjectName: q.subjectName,
-  };
-}
-
 export default function QuizResultsPage() {
   const router = useRouter();
   const params = useParams();
@@ -150,16 +135,9 @@ export default function QuizResultsPage() {
     }
   }, [user, router]);
 
-  const questions: Question[] = useMemo(() => {
-    if (resultsData?.questions) {
-      return resultsData.questions.map(mapBackendQuestion);
-    }
-    return [];
-  }, [resultsData]);
-
-  const totalQuestions = resultsData?.totalQuestions || questions.length || 10;
+  const totalQuestions = resultsData?.totalQuestions || 10;
   const correctCount = resultsData?.correctCount || 0;
-  const scorePercent = resultsData?.score ?? (questions.length > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0);
+  const scorePercent = resultsData?.score ?? (resultsData?.questions?.length ? Math.round((correctCount / totalQuestions) * 100) : 0);
   const isPassed = resultsData?.passed ?? scorePercent >= 70;
 
   const handleRetry = () => {
@@ -274,14 +252,13 @@ export default function QuizResultsPage() {
           </h2>
 
           <div className="flex flex-col gap-6 content-visibility-auto">
-            {questions.map((question, qIdx) => {
-              const backendQ = resultsData?.questions[qIdx];
+            {resultsData?.questions.map((question, qIdx) => {
               return (
                 <QuestionReviewCard
                   key={question.id || qIdx}
                   question={question}
-                  selectedAnswer={backendQ?.selectedAnswer || null}
-                  isCorrect={backendQ?.isCorrect || null}
+                  selectedAnswer={question.selectedAnswer || null}
+                  isCorrect={question.isCorrect || null}
                   qIdx={qIdx}
                 />
               );
