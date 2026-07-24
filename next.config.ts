@@ -1,5 +1,8 @@
 import type { NextConfig } from 'next';
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
+const apiOrigin = new URL(apiUrl).origin;
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   compress: true,
@@ -29,7 +32,7 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://images.unsplash.com https://lh3.googleusercontent.com data:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://178.104.41.51;",
+            value: `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://images.unsplash.com https://lh3.googleusercontent.com data:; font-src 'self' data:; connect-src 'self' ${apiOrigin} https://*.supabase.co;`,
           },
         ],
       },
