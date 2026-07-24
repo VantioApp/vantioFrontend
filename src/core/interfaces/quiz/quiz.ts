@@ -11,7 +11,7 @@ export interface Question {
   order: number;
   statement: string;
   options: QuestionOption[];
-  correctAnswers?: string[];
+  correctAnswer?: string;
   category: string;
   explanation?: string;
   isActive?: boolean;
@@ -25,7 +25,7 @@ export interface QuizAnswer {
   questionId: string;
   testQuestionId: string;
   selectedIndex: number;
-  selectedLabel: string;
+  selectedAnswer: string;
   isCorrect?: boolean | null;
 }
 
@@ -94,7 +94,7 @@ export interface TestResultQuestionRaw {
   text: string;
   options: QuestionOption[];
   selectedAnswer: string | null;
-  correctAnswers: string[];
+  correctAnswer: string;
   isCorrect: boolean | null;
   explanation: string | null;
   themeName: string | null;

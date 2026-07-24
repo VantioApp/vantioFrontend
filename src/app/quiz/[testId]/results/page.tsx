@@ -68,7 +68,7 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
       <div className="flex flex-col gap-2 pt-2">
         {question.options.map((option, oIdx) => {
           const letter = optionLetters[oIdx];
-          const isCorrectOption = question.correctAnswers.includes(option.label);
+          const isCorrectOption = question.correctAnswer === option.label;
           const isStudentChoice = oIdx === studentAnswerIdx;
 
           let rowStyle = 'bg-slate-50 border-slate-200 text-slate-700';

@@ -47,7 +47,7 @@ export interface AdminQuestion {
   externalId: string | null;
   text: string;
   options: QuestionOption[];
-  correctAnswers: string[];
+  correctAnswer: string;
   explanation: string | null;
   difficulty: number;
   source: string | null;
@@ -69,7 +69,7 @@ export interface AdminQuestionsResponse {
 export interface CreateQuestionData {
   text: string;
   options: QuestionOption[];
-  correctAnswers: string[];
+  correctAnswer: string;
   explanation?: string;
   difficulty?: number;
   source?: string;

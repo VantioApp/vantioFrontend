@@ -28,8 +28,8 @@ export function QuestionFormModal({
       { label: 'D', text: '' },
     ],
   );
-  const [correctAnswers, setCorrectAnswers] = useState<string[]>(
-    question?.correctAnswers || [],
+  const [correctAnswer, setCorrectAnswer] = useState<string>(
+    question?.correctAnswer || '',
   );
   const [explanation, setExplanation] = useState(question?.explanation || '');
   const [difficulty, setDifficulty] = useState(question?.difficulty || 1);
@@ -57,15 +57,13 @@ export function QuestionFormModal({
     if (options.length <= 2) return;
     const newOptions = options.filter((_, i) => i !== index);
     setOptions(newOptions);
-    setCorrectAnswers(correctAnswers.filter((a) => a !== options[index].label));
+    if (correctAnswer === options[index].label) {
+      setCorrectAnswer('');
+    }
   };
 
-  const toggleCorrectAnswer = (label: string) => {
-    if (correctAnswers.includes(label)) {
-      setCorrectAnswers(correctAnswers.filter((a) => a !== label));
-    } else {
-      setCorrectAnswers([...correctAnswers, label]);
-    }
+  const setCorrectAnswerOption = (label: string) => {
+    setCorrectAnswer(correctAnswer === label ? '' : label);
   };
 
   const handleSubmit = () => {
@@ -77,8 +75,8 @@ export function QuestionFormModal({
       setValidationError('Todas las opciones deben tener texto');
       return;
     }
-    if (correctAnswers.length === 0) {
-      setValidationError('Debes seleccionar al menos una respuesta correcta');
+    if (correctAnswer === '') {
+      setValidationError('Debes seleccionar una respuesta correcta');
       return;
     }
     if (!subjectId) {
@@ -91,7 +89,7 @@ export function QuestionFormModal({
     const data = {
       text,
       options,
-      correctAnswers,
+      correctAnswer,
       explanation: explanation || undefined,
       difficulty,
       subjectId,
@@ -180,14 +178,14 @@ export function QuestionFormModal({
                   />
                   <button
                     type="button"
-                    onClick={() => toggleCorrectAnswer(option.label)}
+                    onClick={() => setCorrectAnswerOption(option.label)}
                     className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                      correctAnswers.includes(option.label)
+                      correctAnswer === option.label
                         ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                         : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'
                     }`}
                   >
-                    {correctAnswers.includes(option.label) ? 'Correcta' : 'Marcar'}
+                    {correctAnswer === option.label ? 'Correcta' : 'Marcar'}
                   </button>
                   {options.length > 2 && (
                     <button

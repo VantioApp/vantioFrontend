@@ -24,20 +24,32 @@ export default function QuizPage() {
 
   const handleFinishQuiz = useCallback(() => {
     const { testId: currentTestId, answers: currentAnswers } = useQuizStore.getState();
+    console.log('[Quiz] handleFinishQuiz called', { testId: currentTestId, answersCount: currentAnswers.length });
     if (!currentTestId) return;
     const submitAnswers = currentAnswers
-      .filter((a) => a.selectedLabel)
+      .filter((a) => a.selectedAnswer)
       .map((a) => ({
         testQuestionId: a.testQuestionId,
-        selectedAnswer: a.selectedLabel,
+        selectedAnswer: a.selectedAnswer,
       }));
     
-    if (submitAnswers.length === 0) return;
+    console.log('[Quiz] submitAnswers prepared', { submitAnswersCount: submitAnswers.length, firstFew: submitAnswers.slice(0, 3) });
+    
+    if (submitAnswers.length === 0) {
+      console.warn('[Quiz] No answers to submit, aborting');
+      return;
+    }
     
     setIsFinishing(true);
     submitQuiz({ testId: currentTestId, answers: submitAnswers }, {
-      onSuccess: () => router.push(`/quiz/${currentTestId}/results`),
-      onError: () => setIsFinishing(false),
+      onSuccess: (data) => {
+        console.log('[Quiz] Submit success', data);
+        router.push(`/quiz/${currentTestId}/results`);
+      },
+      onError: (error) => {
+        console.error('[Quiz] Submit error', error);
+        setIsFinishing(false);
+      },
     });
   }, [submitQuiz, router]);
 
@@ -45,7 +57,9 @@ export default function QuizPage() {
     const isLastQuestion = currentQuestionIndex + 1 >= questions.length;
     nextQuestion();
     if (isLastQuestion) {
-      handleFinishQuiz();
+      setTimeout(() => {
+        handleFinishQuiz();
+      }, 0);
     }
   }, [currentQuestionIndex, questions.length, nextQuestion, handleFinishQuiz]);
 

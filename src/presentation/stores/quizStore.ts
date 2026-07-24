@@ -47,14 +47,14 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     if (selectedOptionIndex === null) return;
 
     const currentQuestion = questions[currentQuestionIndex];
-    const selectedLabel = currentQuestion.options[selectedOptionIndex].label;
+    const selectedAnswer = currentQuestion.options[selectedOptionIndex].label;
     const nextAnswers = [
       ...answers,
       {
         questionId: currentQuestion.id,
         testQuestionId: currentQuestion.testQuestionId,
         selectedIndex: selectedOptionIndex,
-        selectedLabel,
+        selectedAnswer,
         isCorrect: null,
       },
     ];

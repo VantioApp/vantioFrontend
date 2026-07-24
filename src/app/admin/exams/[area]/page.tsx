@@ -206,7 +206,7 @@ export default function AreaQuestionsPage() {
                           <span
                             key={opt.label}
                             className={`px-2 py-0.5 rounded text-xs font-medium ${
-                              question.correctAnswers.includes(opt.label)
+                              question.correctAnswer === opt.label
                                 ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                                 : 'bg-slate-50 text-slate-500 border border-slate-100'
                             }`}
