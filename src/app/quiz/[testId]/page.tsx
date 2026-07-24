@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Timer, X, ArrowRight, Gavel } from 'lucide-react';
+import { Timer, X, ArrowRight, Gavel, Loader2 } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
 import { useQuizStore } from '@/presentation/stores/quizStore';
 import { useSubmitQuiz } from '@/presentation/hooks/use-quiz';
@@ -10,7 +10,8 @@ import { formatTime } from '@/core/utils/format-time';
 
 export default function QuizPage() {
   const router = useRouter();
-  const { mutate: submitQuiz } = useSubmitQuiz();
+  const { mutate: submitQuiz, isPending: isSubmitting } = useSubmitQuiz();
+  const [isFinishing, setIsFinishing] = useState(false);
   const questions = useQuizStore((s) => s.questions);
   const currentQuestionIndex = useQuizStore((s) => s.currentQuestionIndex);
   const selectedOptionIndex = useQuizStore((s) => s.selectedOptionIndex);
@@ -33,8 +34,10 @@ export default function QuizPage() {
     
     if (submitAnswers.length === 0) return;
     
+    setIsFinishing(true);
     submitQuiz({ testId: currentTestId, answers: submitAnswers }, {
       onSuccess: () => router.push(`/quiz/${currentTestId}/results`),
+      onError: () => setIsFinishing(false),
     });
   }, [submitQuiz, router]);
 
@@ -90,6 +93,8 @@ export default function QuizPage() {
       router.push('/dashboard');
     }
   };
+
+  const isProcessing = isSubmitting || isFinishing;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-800 antialiased justify-between">
@@ -169,7 +174,8 @@ export default function QuizPage() {
         <div className="flex justify-between items-center gap-4 w-full">
           <button
             onClick={handleCancelQuiz}
-            className="inline-flex items-center gap-1.5 px-5 py-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-500 hover:text-rose-600 hover:border-rose-200 bg-white transition-all active:scale-95 shadow-xs cursor-pointer"
+            disabled={isProcessing}
+            className="inline-flex items-center gap-1.5 px-5 py-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-500 hover:text-rose-600 hover:border-rose-200 bg-white transition-all active:scale-95 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <X className="w-4 h-4" />
             Finalizar Prueba
@@ -177,15 +183,24 @@ export default function QuizPage() {
 
           <button
             onClick={handleNextQuestion}
-            disabled={selectedOptionIndex === null}
+            disabled={selectedOptionIndex === null || isProcessing}
             className={`inline-flex items-center gap-2 px-6 py-3.5 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm ${
-              selectedOptionIndex === null
+              selectedOptionIndex === null || isProcessing
                 ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-200'
                 : 'bg-slate-900 hover:bg-slate-800 text-white border border-slate-950 hover:shadow-md cursor-pointer'
             }`}
           >
-            {currentQuestionIndex + 1 === questions.length ? 'Finalizar Prueba' : 'Siguiente Pregunta'}
-            <ArrowRight className="w-4 h-4 text-amber-400" />
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Enviando respuestas...
+              </>
+            ) : (
+              <>
+                {currentQuestionIndex + 1 === questions.length ? 'Finalizar Prueba' : 'Siguiente Pregunta'}
+                <ArrowRight className="w-4 h-4 text-amber-400" />
+              </>
+            )}
           </button>
         </div>
       </main>

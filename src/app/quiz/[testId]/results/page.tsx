@@ -7,7 +7,7 @@ import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { 
   CheckCircle, AlertTriangle, Gavel, RefreshCw, 
-  ChevronRight, BookOpen, Award, Loader2
+  ChevronRight, BookOpen, Award, Loader2, X
 } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
 import { useQuizStore } from '@/presentation/stores/quizStore';
@@ -90,12 +90,16 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
               <span className="pt-0.5 leading-normal">{option.text}</span>
               
               {isCorrectOption && (
-                <span className="ml-auto text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded-md shrink-0">
-                  Respuesta Correcta
+                <span className="ml-auto text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1">
+                  {isStudentChoice && (
+                    <CheckCircle className="w-3 h-3" />
+                  )}
+                  {isStudentChoice ? 'Tu Respuesta Correcta' : 'Respuesta Correcta'}
                 </span>
               )}
               {isStudentChoice && !isCorrectOption && (
-                <span className="ml-auto text-[10px] font-bold text-rose-700 uppercase tracking-wider bg-rose-100 px-2 py-0.5 rounded-md shrink-0">
+                <span className="ml-auto text-[10px] font-bold text-rose-700 uppercase tracking-wider bg-rose-100 px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1">
+                  <X className="w-3 h-3" />
                   Tu Selección
                 </span>
               )}

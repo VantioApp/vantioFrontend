@@ -25,12 +25,25 @@ const PlanRefuerzo = React.memo(function PlanRefuerzo({ feedback }: { feedback: 
     <div className="flex flex-col gap-6">
       {recommendation && (
         <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8 shadow-xs">
-          <h3 className="font-serif text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <h3 className="font-serif text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-amber-600" />
             Diagnóstico y Recomendaciones
           </h3>
-          <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-            {recommendation}
+          <div className="text-sm text-slate-700 leading-relaxed">
+            {recommendation.split('\n').map((line, idx) => {
+              if (line.trim() === '') {
+                return <br key={idx} />;
+              }
+              if (line.startsWith('•')) {
+                return (
+                  <div key={idx} className="flex items-start gap-2 ml-4 my-1">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>{line.substring(1).trim()}</span>
+                  </div>
+                );
+              }
+              return <p key={idx} className="my-2">{line}</p>;
+            })}
           </div>
         </div>
       )}
@@ -49,7 +62,7 @@ const PlanRefuerzo = React.memo(function PlanRefuerzo({ feedback }: { feedback: 
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-sm text-slate-900">
                       {theme.name}
-                      <span className="text-xs font-normal text-slate-500 ml-1.5">({theme.subjectName})</span>
+                      <span className="text-xs font-normal text-slate-500 ml-2">({theme.subjectName})</span>
                     </span>
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                       theme.pct < 40 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
