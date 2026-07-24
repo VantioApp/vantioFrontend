@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Content-Security-Policy',
-            value: `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://images.unsplash.com https://lh3.googleusercontent.com data:; font-src 'self' data:; connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ''} https://*.supabase.co;`,
+            value: `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://images.unsplash.com https://lh3.googleusercontent.com data:; font-src 'self' data:; connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ''} https://*.supabase.co;`,
           },
         ],
       },
