@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Award, GraduationCap } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
 import { HeroSection, FeaturesSection } from '@/presentation/components/landing/LandingClient';
+import { Footer } from '@/presentation/components/ui/footer';
 
 export default function LandingPage() {
   return (
@@ -61,24 +62,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col items-center md:items-start gap-2">
-            <div className="flex items-center">
-              <Logo variant="full" theme="dark" height={28} />
-            </div>
-            <p className="text-xs text-slate-500 text-center md:text-left">
-              (c) 2026 Vantio Legal Education. Todos los derechos reservados. Excelencia Profesional en el Derecho.
-            </p>
-          </div>
-
-          <nav className="flex flex-wrap gap-6 justify-center">
-            <a href="#" className="text-xs hover:text-white transition-colors">Terminos de Servicio</a>
-            <a href="#" className="text-xs hover:text-white transition-colors">Politica de Privacidad</a>
-            <a href="#" className="text-xs hover:text-white transition-colors">Soporte Tecnico</a>
-          </nav>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

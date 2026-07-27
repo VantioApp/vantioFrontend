@@ -10,6 +10,7 @@ import {
   ChevronRight, BookOpen, Award, Loader2, X
 } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
+import { FooterMinimal } from '@/presentation/components/ui/footer';
 import { useQuizStore } from '@/presentation/stores/quizStore';
 import { useProfile } from '@/presentation/hooks/use-profile';
 import { useQuizResults } from '@/presentation/hooks/use-quiz-results';
@@ -271,11 +272,7 @@ export default function QuizResultsPage() {
         </div>
       </main>
 
-      <footer className="bg-slate-900 py-6 text-center border-t border-slate-800">
-        <p className="text-xs text-slate-500">
-          © 2026 Vantio Legal Education. Todos los derechos reservados. Excelencia Profesional en el Derecho.
-        </p>
-      </footer>
+      <FooterMinimal />
     </div>
   );
 }

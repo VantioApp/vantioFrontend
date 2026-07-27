@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import Link from 'next/link';
 import { Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
+import { FooterMinimal } from '@/presentation/components/ui/footer';
 import { useLogin } from '@/presentation/hooks/use-auth';
 import { useAuthStore } from '@/presentation/stores/authStore';
 
@@ -146,11 +147,7 @@ export default function LoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 w-full py-4 text-center border-t border-slate-800 shrink-0">
-        <p className="text-[11px] text-slate-500">
-          © 2026 Vantio Legal Education. Todos los derechos reservados. Excelencia Profesional en el Derecho.
-        </p>
-      </footer>
+      <FooterMinimal />
     </div>
   );
 }

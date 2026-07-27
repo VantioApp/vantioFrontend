@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import Link from 'next/link';
 import { Mail, Lock, User, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
+import { FooterMinimal } from '@/presentation/components/ui/footer';
 import { useRegister } from '@/presentation/hooks/use-auth';
 
 export default function RegisterPage() {
@@ -154,13 +155,13 @@ export default function RegisterPage() {
               />
               <label htmlFor="terms" className="text-xs text-slate-500 leading-normal select-none cursor-pointer">
                 Acepto los{' '}
-                <a href="#" className="text-amber-600 font-semibold hover:underline">
+                <Link href="/terms" className="text-amber-600 font-semibold hover:underline">
                   Términos de Servicio
-                </a>{' '}
+                </Link>{' '}
                 y la{' '}
-                <a href="#" className="text-amber-600 font-semibold hover:underline">
+                <Link href="/privacy" className="text-amber-600 font-semibold hover:underline">
                   Política de Privacidad
-                </a>
+                </Link>
                 .
               </label>
             </div>
@@ -186,11 +187,7 @@ export default function RegisterPage() {
         </motion.div>
       </main>
 
-      <footer className="bg-slate-900 w-full py-4 text-center border-t border-slate-800 shrink-0">
-        <p className="text-[11px] text-slate-500">
-          © 2026 Vantio Legal Education. Todos los derechos reservados. Excelencia Profesional en el Derecho.
-        </p>
-      </footer>
+      <FooterMinimal />
     </div>
   );
 }
