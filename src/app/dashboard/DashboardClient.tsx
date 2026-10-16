@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { BookOpen, Users, CheckCircle2, XCircle, GraduationCap, LogIn, LogOut as LogOutIcon, ChevronRight, TrendingUp } from 'lucide-react';
+import { BookOpen, Users, CheckCircle2, GraduationCap, LogIn, LogOut as LogOutIcon, TrendingUp } from 'lucide-react';
 import { useProfile } from '@/presentation/hooks/use-profile';
 import { useQuizHistory } from '@/presentation/hooks/use-quiz-history';
 import { useGenerateQuiz } from '@/presentation/hooks/use-quiz';
@@ -13,20 +13,14 @@ import { useMyEnrollments } from '@/presentation/hooks/use-my-enrollments';
 import { useEnrollArea } from '@/presentation/hooks/use-enroll-area';
 import { useUnenrollArea } from '@/presentation/hooks/use-unenroll-area';
 import { useQuizStore } from '@/presentation/stores/quizStore';
+import { HistoryTable } from '@/presentation/components/quiz/HistoryTable';
 import StartQuizDialog, { type StartQuizOptions } from '@/presentation/components/quiz/StartQuizDialog';
 import { formatDate } from '@/core/utils/format-date';
-import { formatDateTime } from '@/core/utils/format-date-time';
-import type { User, PaginatedHistory } from '@/core/interfaces';
 
-interface DashboardClientProps {
-  initialUser: User | null;
-  initialHistory: PaginatedHistory | null;
-}
-
-export default function DashboardClient({ initialUser, initialHistory }: DashboardClientProps) {
+export default function DashboardClient() {
   const router = useRouter();
-  const { data: user } = useProfile(initialUser || undefined);
-  const { data: historyData } = useQuizHistory(user?.id, initialHistory || undefined);
+  const { data: user } = useProfile();
+  const { data: historyData } = useQuizHistory(user?.id);
   const { mutate: generateQuiz, isPending: isGenerating } = useGenerateQuiz();
   const { data: availableAreas = [] } = useAvailableAreas();
   const { data: myEnrollments } = useMyEnrollments();
@@ -35,6 +29,10 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
 
   const enrolledAreas = myEnrollments?.enrolledAreas ?? user?.enrolledAreas ?? [];
   const history = historyData?.items ?? [];
+  // Los cursos en los que ya está inscrito aparecen primero.
+  const sortedAreas = [...availableAreas].sort(
+    (a, b) => Number(enrolledAreas.includes(b.area)) - Number(enrolledAreas.includes(a.area)),
+  );
 
   const [configuringArea, setConfiguringArea] = useState<string | null>(null);
 
@@ -131,7 +129,7 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {availableAreas.map((area) => {
+              {sortedAreas.map((area) => {
                 const isEnrolled = enrolledAreas.includes(area.area);
                 return (
                   <div
@@ -215,62 +213,7 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
             </div>
 
             {history.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                      <th className="py-3 px-2 font-medium">Área</th>
-                      <th className="py-3 px-2 font-medium">Fecha</th>
-                      <th className="py-3 px-2 font-medium">Puntaje</th>
-                      <th className="py-3 px-2 font-medium">%</th>
-                      <th className="py-3 px-2 font-medium text-right">Estado</th>
-                      <th className="py-3 px-2 font-medium text-right">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    {history.slice(0, 5).map((test) => (
-                      <tr
-                        key={test.id}
-                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
-                        onClick={() => router.push(`/quiz/${test.id}/results`)}
-                      >
-                        <td className="py-4 px-2 font-medium text-slate-900">{test.area}</td>
-                        <td className="py-4 px-2 text-slate-600 text-xs">
-                          {test.finishedAt ? formatDateTime(test.finishedAt) : formatDateTime(test.startedAt)}
-                        </td>
-                        <td className="py-4 px-2 text-slate-900 font-semibold">
-                          {test.correctCount}/{test.totalQuestions}
-                        </td>
-                        <td className="py-4 px-2 text-slate-900 font-semibold">
-                          {Math.round(test.score)}%
-                        </td>
-                        <td className="py-4 px-2 text-right">
-                          {test.passed ? (
-                            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded text-xs font-semibold">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              Aprobado
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-200 px-2 py-1 rounded text-xs font-semibold">
-                              <XCircle className="w-3.5 h-3.5" />
-                              Requiere Refuerzo
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-4 px-2 text-right">
-                          <Link
-                            href={`/quiz/${test.id}/results`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-xs font-semibold cursor-pointer"
-                          >
-                            Ver <ChevronRight className="w-3.5 h-3.5" />
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <HistoryTable items={history.slice(0, 5)} />
             ) : (
               <div className="text-center py-12 border border-dashed border-slate-200 rounded-lg">
                 <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />

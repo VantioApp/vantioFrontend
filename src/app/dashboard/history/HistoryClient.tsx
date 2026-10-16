@@ -1,15 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { BookOpen, CheckCircle2, XCircle, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePaginatedHistory } from '@/presentation/hooks/use-paginated-history';
 import { useProfile } from '@/presentation/hooks/use-profile';
-import { formatDateTime } from '@/core/utils/format-date-time';
+import { HistoryTable } from '@/presentation/components/quiz/HistoryTable';
 
 export default function HistoryClient() {
-  const router = useRouter();
   const { data: user } = useProfile();
   const [page, setPage] = useState(1);
   const limit = 20;
@@ -42,62 +39,7 @@ export default function HistoryClient() {
           </div>
         ) : items.length > 0 ? (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                    <th className="py-3 px-2 font-medium">Área</th>
-                    <th className="py-3 px-2 font-medium">Fecha</th>
-                    <th className="py-3 px-2 font-medium">Puntaje</th>
-                    <th className="py-3 px-2 font-medium">%</th>
-                    <th className="py-3 px-2 font-medium text-right">Estado</th>
-                    <th className="py-3 px-2 font-medium text-right">Acción</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm">
-                  {items.map((test) => (
-                    <tr
-                      key={test.id}
-                      className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/quiz/${test.id}/results`)}
-                    >
-                      <td className="py-4 px-2 font-medium text-slate-900">{test.area}</td>
-                      <td className="py-4 px-2 text-slate-600 text-xs">
-                        {test.finishedAt ? formatDateTime(test.finishedAt) : formatDateTime(test.startedAt)}
-                      </td>
-                      <td className="py-4 px-2 text-slate-900 font-semibold">
-                        {test.correctCount}/{test.totalQuestions}
-                      </td>
-                      <td className="py-4 px-2 text-slate-900 font-semibold">
-                        {Math.round(test.score)}%
-                      </td>
-                      <td className="py-4 px-2 text-right">
-                        {test.passed ? (
-                          <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded text-xs font-semibold">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Aprobado
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-200 px-2 py-1 rounded text-xs font-semibold">
-                            <XCircle className="w-3.5 h-3.5" />
-                            Requiere Refuerzo
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-2 text-right">
-                        <Link
-                          href={`/quiz/${test.id}/results`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 text-xs font-semibold cursor-pointer"
-                        >
-                          Ver <ChevronRightIcon className="w-3.5 h-3.5" />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <HistoryTable items={items} />
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
