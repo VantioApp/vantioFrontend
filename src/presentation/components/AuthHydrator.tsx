@@ -7,6 +7,12 @@ import { getProfileAction } from '@/core/actions/auth/auth-actions';
 
 const getServerSnapshot = () => false;
 
+/** El token no se persiste en localStorage: tras recargar se recupera de la cookie de sesión. */
+function readTokenCookie(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)(?:vantio_token|access_token)=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 function useAuthHydrated(): boolean {
   return useSyncExternalStore(
     (onStoreChange) => {
@@ -23,6 +29,13 @@ export function AuthHydrator() {
   const isHydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.token);
   const setAuth = useAuthStore((s) => s.setAuth);
+
+  useEffect(() => {
+    if (isHydrated && !token) {
+      const cookieToken = readTokenCookie();
+      if (cookieToken) useAuthStore.setState({ token: cookieToken, isAuthenticated: true });
+    }
+  }, [isHydrated, token]);
 
   useEffect(() => {
     if (isHydrated && token) {

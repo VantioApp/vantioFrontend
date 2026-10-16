@@ -14,10 +14,14 @@ const questionSchema = z.object({
   id: z.string().min(1),
   number: z.number().int().positive(),
   text: z.string().min(1),
-  options: z.array(questionOptionSchema).length(4),
+  options: z.array(questionOptionSchema).min(2).max(4),
   correctAnswer: z.string().regex(/^[A-D]$/),
   theme: z.string().nullable().optional(),
   explanation: z.string().optional(),
+  caseText: z.string().optional(),
+  optionExplanations: z.record(z.string(), z.string()).optional(),
+  sources: z.array(z.string()).optional(),
+  difficulty: z.number().int().min(1).max(3).optional(),
   needsReview: z.boolean().optional(),
 });
 

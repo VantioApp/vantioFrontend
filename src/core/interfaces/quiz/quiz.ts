@@ -9,6 +9,7 @@ export interface Question {
   id: string;
   testQuestionId: string;
   order: number;
+  caseText?: string | null;
   statement: string;
   options: QuestionOption[];
   correctAnswer?: string;
@@ -63,6 +64,7 @@ export interface PaginatedHistory {
 export interface GenerateQuizRequest {
   area: string;
   totalQuestions?: number;
+  subjectIds?: string[];
 }
 
 export interface GenerateQuizResponse {
@@ -91,12 +93,15 @@ export interface SubmitQuizResponse {
 export interface TestResultQuestionRaw {
   id: string;
   order: number;
+  caseText?: string | null;
   text: string;
   options: QuestionOption[];
   selectedAnswer: string | null;
   correctAnswer: string;
   isCorrect: boolean | null;
   explanation: string | null;
+  optionExplanations?: Record<string, string> | null;
+  sources?: string[];
   themeName: string | null;
   subjectName: string;
 }

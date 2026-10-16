@@ -16,6 +16,7 @@ import { useProfile } from '@/presentation/hooks/use-profile';
 import { useQuizResults } from '@/presentation/hooks/use-quiz-results';
 import PlanRefuerzo from '@/presentation/components/quiz/PlanRefuerzo';
 import PerformancePolarChart from '@/presentation/components/quiz/PerformancePolarChart';
+import { CaseBlock, OptionExplanation, SourcesBlock } from '@/presentation/components/quiz/QuestionExtras';
 import type { TestResultQuestionRaw, TestResultsResponse } from '@/core/interfaces';
 
 const optionLetters = ['A', 'B', 'C', 'D'];
@@ -62,6 +63,8 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
         </div>
       </div>
 
+      <CaseBlock caseText={question.caseText} />
+
       <h3 className="font-serif text-lg text-slate-900 font-bold leading-normal">
         {question.text}
       </h3>
@@ -88,7 +91,13 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
               <span className={`flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs border ${letterStyle}`}>
                 {letter}
               </span>
-              <span className="pt-0.5 leading-normal">{option.text}</span>
+              <div className="pt-0.5 leading-normal min-w-0">
+                <span>{option.text}</span>
+                <OptionExplanation
+                  text={question.optionExplanations?.[option.label]}
+                  isCorrect={isCorrectOption}
+                />
+              </div>
               
               {isCorrectOption && (
                 <span className="ml-auto text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1">
@@ -109,7 +118,9 @@ const QuestionReviewCard = React.memo(function QuestionReviewCard({
         })}
       </div>
 
-      {question.explanation && (
+      <SourcesBlock sources={question.sources} />
+
+      {question.explanation && !question.optionExplanations && (
         <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
           <p className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
             <BookOpen className="w-4 h-4 text-amber-600" />

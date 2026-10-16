@@ -73,6 +73,10 @@ export interface AdminQuestion {
   options: QuestionOption[];
   correctAnswer: string;
   explanation: string | null;
+  caseText?: string | null;
+  optionExplanations?: Record<string, string> | null;
+  sources?: string[];
+  needsReview?: boolean;
   difficulty: number;
   source: string | null;
   themeId: string | null;
@@ -95,6 +99,10 @@ export interface CreateQuestionData {
   options: QuestionOption[];
   correctAnswer: string;
   explanation?: string;
+  caseText?: string;
+  optionExplanations?: Record<string, string>;
+  sources?: string[];
+  needsReview?: boolean;
   difficulty?: number;
   source?: string;
   subjectId: string;
@@ -118,6 +126,10 @@ export interface ImportQuestionsData {
     explanation: string | null;
     theme: string | null;
     needsReview: boolean;
+    caseText?: string;
+    optionExplanations?: Record<string, string>;
+    sources?: string[];
+    difficulty?: number;
   }[];
 }
 
@@ -137,10 +149,17 @@ export interface QuizAttempt {
   status: 'Aprobado' | 'Requiere refuerzo';
 }
 
+export interface AvailableSubject {
+  id: string;
+  name: string;
+  totalQuestions: number;
+}
+
 export interface AvailableArea {
   area: string;
   subjectCount: number;
   totalQuestions: number;
+  subjects: AvailableSubject[];
 }
 
 export interface MyEnrollments {

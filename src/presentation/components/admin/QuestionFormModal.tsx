@@ -20,6 +20,8 @@ export function QuestionFormModal({
   onSuccess,
 }: QuestionFormModalProps) {
   const [text, setText] = useState(question?.text || '');
+  const [caseText, setCaseText] = useState(question?.caseText || '');
+  const [needsReview, setNeedsReview] = useState(question?.needsReview ?? false);
   const [options, setOptions] = useState<QuestionOption[]>(
     question?.options || [
       { label: 'A', text: '' },
@@ -91,6 +93,8 @@ export function QuestionFormModal({
       options,
       correctAnswer,
       explanation: explanation || undefined,
+      caseText: caseText.trim() || undefined,
+      needsReview,
       difficulty,
       subjectId,
       source: source || undefined,
@@ -238,6 +242,29 @@ export function QuestionFormModal({
               />
             </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Caso (opcional)
+            </label>
+            <textarea
+              value={caseText}
+              onChange={(e) => setCaseText(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-slate-900"
+              placeholder="Contexto previo al enunciado, para preguntas de caso..."
+            />
+          </div>
+
+          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={needsReview}
+              onChange={(e) => setNeedsReview(e.target.checked)}
+              className="cursor-pointer"
+            />
+            Pendiente de revisión
+          </label>
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">

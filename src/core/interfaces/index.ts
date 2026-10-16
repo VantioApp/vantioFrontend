@@ -45,3 +45,16 @@ export type {
 
 // Questions
 export type { Subject, QuestionsPaginatedResponse } from './questions/questions';
+
+// Reviews
+export type {
+  ReviewVerdict,
+  ReviewState,
+  ReviewQuestion,
+  ReviewSet,
+  SaveReviewData,
+  ReviewLink,
+  CreateReviewLinkData,
+  ReviewLinkResultItem,
+  ReviewLinkResults,
+} from './reviews/reviews';

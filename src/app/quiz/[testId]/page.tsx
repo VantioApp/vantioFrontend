@@ -7,6 +7,7 @@ import { Logo } from '@/presentation/components/ui/logo';
 import { useQuizStore } from '@/presentation/stores/quizStore';
 import { useSubmitQuiz } from '@/presentation/hooks/use-quiz';
 import { formatTime } from '@/core/utils/format-time';
+import { CaseBlock } from '@/presentation/components/quiz/QuestionExtras';
 
 export default function QuizPage() {
   const router = useRouter();
@@ -151,6 +152,8 @@ export default function QuizPage() {
               {currentQuestion.category}
             </span>
           </div>
+
+          <CaseBlock caseText={currentQuestion.caseText} />
 
           <h2 className="font-serif text-xl md:text-2xl text-slate-900 font-bold leading-relaxed mb-8">
             {currentQuestion.statement}

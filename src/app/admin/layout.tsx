@@ -9,7 +9,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Users, FileText, BarChart2, Settings, HelpCircle, LogOut, PlusCircle,
-  LayoutDashboard,
+  LayoutDashboard, ClipboardCheck,
 } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
 import { useAuthStore } from '@/presentation/stores/authStore';
@@ -18,6 +18,7 @@ import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/exams', label: 'Exams', icon: FileText },
+  { href: '/admin/reviews', label: 'Revisiones', icon: ClipboardCheck },
   { href: '/admin/users', label: 'User Management', icon: Users },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart2 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
