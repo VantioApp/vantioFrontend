@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -12,6 +13,7 @@ import { useMyEnrollments } from '@/presentation/hooks/use-my-enrollments';
 import { useEnrollArea } from '@/presentation/hooks/use-enroll-area';
 import { useUnenrollArea } from '@/presentation/hooks/use-unenroll-area';
 import { useQuizStore } from '@/presentation/stores/quizStore';
+import StartQuizDialog, { type StartQuizOptions } from '@/presentation/components/quiz/StartQuizDialog';
 import { formatDate } from '@/core/utils/format-date';
 import { formatDateTime } from '@/core/utils/format-date-time';
 import type { User, PaginatedHistory } from '@/core/interfaces';
@@ -34,8 +36,10 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
   const enrolledAreas = myEnrollments?.enrolledAreas ?? user?.enrolledAreas ?? [];
   const history = historyData?.items ?? [];
 
-  const handleStartQuiz = (area: string) => {
-    generateQuiz({ area }, {
+  const [configuringArea, setConfiguringArea] = useState<string | null>(null);
+
+  const handleStartQuiz = (area: string, options: StartQuizOptions) => {
+    generateQuiz({ area, ...options }, {
       onSuccess: () => {
         const { testId } = useQuizStore.getState();
         if (testId) router.push(`/quiz/${testId}`);
@@ -160,7 +164,7 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
                       {isEnrolled ? (
                         <>
                           <button
-                            onClick={() => handleStartQuiz(area.area)}
+                            onClick={() => setConfiguringArea(area.area)}
                             disabled={isGenerating}
                             className="flex-1 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-all active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
@@ -276,6 +280,18 @@ export default function DashboardClient({ initialUser, initialHistory }: Dashboa
           </div>
         </div>
       </div>
+
+      {(() => {
+        const area = availableAreas.find((a) => a.area === configuringArea);
+        return area ? (
+          <StartQuizDialog
+            area={area}
+            isPending={isGenerating}
+            onClose={() => setConfiguringArea(null)}
+            onStart={(options) => handleStartQuiz(area.area, options)}
+          />
+        ) : null;
+      })()}
     </>
   );
 }

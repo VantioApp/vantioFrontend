@@ -9,12 +9,14 @@ export function useGenerateQuiz() {
     mutationFn: ({
       area,
       totalQuestions,
+      subjectIds,
     }: {
       area: string;
       totalQuestions?: number;
+      subjectIds?: string[];
     }) => {
       const token = useAuthStore.getState().token;
-      return generateQuizAction({ area, totalQuestions }, token!);
+      return generateQuizAction({ area, totalQuestions, subjectIds }, token!);
     },
     onSuccess: (data: GenerateQuizResponse) => {
       useQuizStore.getState().setQuiz(data.testId, data.questions);

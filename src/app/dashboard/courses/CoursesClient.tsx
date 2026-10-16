@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookOpen, CheckCircle2, LogIn, LogOut as LogOutIcon, GraduationCap } from 'lucide-react';
 import { useAvailableAreas } from '@/presentation/hooks/use-available-areas';
@@ -8,6 +9,7 @@ import { useEnrollArea } from '@/presentation/hooks/use-enroll-area';
 import { useUnenrollArea } from '@/presentation/hooks/use-unenroll-area';
 import { useGenerateQuiz } from '@/presentation/hooks/use-quiz';
 import { useQuizStore } from '@/presentation/stores/quizStore';
+import StartQuizDialog, { type StartQuizOptions } from '@/presentation/components/quiz/StartQuizDialog';
 
 export default function CoursesClient() {
   const router = useRouter();
@@ -15,12 +17,14 @@ export default function CoursesClient() {
   const { data: myEnrollments } = useMyEnrollments();
   const { mutate: enrollArea, isPending: isEnrolling } = useEnrollArea();
   const { mutate: unenrollArea, isPending: isUnenrolling } = useUnenrollArea();
-  const { mutate: generateQuiz } = useGenerateQuiz();
+  const { mutate: generateQuiz, isPending: isGenerating } = useGenerateQuiz();
 
   const enrolledAreas = myEnrollments?.enrolledAreas ?? [];
 
-  const handleStartQuiz = (area: string) => {
-    generateQuiz({ area }, {
+  const [configuringArea, setConfiguringArea] = useState<string | null>(null);
+
+  const handleStartQuiz = (area: string, options: StartQuizOptions) => {
+    generateQuiz({ area, ...options }, {
       onSuccess: () => {
         const { testId } = useQuizStore.getState();
         if (testId) router.push(`/quiz/${testId}`);
@@ -78,7 +82,7 @@ export default function CoursesClient() {
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleStartQuiz(area.area)}
+                    onClick={() => setConfiguringArea(area.area)}
                     className="flex-1 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-all active:scale-95 cursor-pointer"
                   >
                     Iniciar Prueba
@@ -146,6 +150,18 @@ export default function CoursesClient() {
           <p className="text-sm font-medium text-slate-500">No hay áreas disponibles en este momento.</p>
         </div>
       )}
+
+      {(() => {
+        const area = availableAreas.find((a) => a.area === configuringArea);
+        return area ? (
+          <StartQuizDialog
+            area={area}
+            isPending={isGenerating}
+            onClose={() => setConfiguringArea(null)}
+            onStart={(options) => handleStartQuiz(area.area, options)}
+          />
+        ) : null;
+      })()}
     </>
   );
 }

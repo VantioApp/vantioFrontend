@@ -9,6 +9,13 @@ interface QuizStore extends QuizState {
   resetQuiz: () => void;
 }
 
+const BASE_QUIZ_SECONDS = 1800;
+const SECONDS_PER_QUESTION = 45;
+
+/** 30 min para 40 preguntas; los simulacros más largos escalan a 45 s por pregunta. */
+const quizDuration = (questionCount: number) =>
+  Math.max(BASE_QUIZ_SECONDS, questionCount * SECONDS_PER_QUESTION);
+
 const initialQuizState: QuizState = {
   testId: null,
   questions: [],
@@ -16,7 +23,7 @@ const initialQuizState: QuizState = {
   selectedOptionIndex: null,
   answers: [],
   score: 0,
-  timeLeft: 1800,
+  timeLeft: BASE_QUIZ_SECONDS,
   isActive: false,
   isFinished: false,
 };
@@ -32,7 +39,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       selectedOptionIndex: null,
       answers: [],
       score: 0,
-      timeLeft: 1800,
+      timeLeft: quizDuration(questions.length),
       isActive: true,
       isFinished: false,
     });

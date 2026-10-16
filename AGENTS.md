@@ -487,7 +487,7 @@ onSettled: () => {
    - Redirige a `/quiz/[testId]`
 4. **Backend**: Busca todas las materias del área, selecciona 40 preguntas aleatorias y crea `TestSession`
 5. **Interfaz**: Usuario responde preguntas una por una en `/quiz/[testId]`
-6. **Timer**: Countdown de 30 minutos, manejado por `quizStore.tickTimer()`
+6. **Timer**: Countdown de 45 s por pregunta (mínimo 30 minutos), manejado por `quizStore.tickTimer()`
 7. **Envío con mutación**: 
    - Al finalizar (timer o última pregunta), `useSubmitQuiz()` ejecuta `submitQuizAction`
    - On success: invalida `['quiz-history']` para actualizar dashboard
