@@ -7,6 +7,7 @@ import {
   LayoutDashboard, GraduationCap, History, UserCircle, LogOut,
 } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
+import { MobileNavDrawer } from '@/presentation/components/ui/MobileNavDrawer';
 import { useAuthStore } from '@/presentation/stores/authStore';
 import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
 
@@ -83,7 +84,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <main className="flex-grow flex flex-col min-w-0 overflow-y-auto md:ml-64">
         <header className="md:hidden bg-slate-900 border-b border-slate-800 h-16 px-6 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <MobileNavDrawer
+              items={navItems}
+              title="Vantio Suite"
+              subtitle="Estudiante"
+              logoutLabel="Cerrar Sesión"
+              onLogout={handleLogout}
+              exactHrefs={['/dashboard']}
+            />
             <Logo variant="isotype" theme="dark" height={28} />
             <span className="font-serif font-bold text-white text-lg">Vantio</span>
           </div>
