@@ -17,7 +17,7 @@ export function HeroSection() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200/80"
           >
             <Award className="w-4 h-4 text-amber-600" />
-            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">El estandar de oro en educacion juridica</span>
+            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Concurso DIAN 2676 · Gestor II · OPEC 236844</span>
           </AnimatedDiv>
 
           <AnimatedDiv 
@@ -26,7 +26,7 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="font-serif text-4xl sm:text-5xl lg:text-6xl text-slate-900 font-bold leading-[1.1] tracking-tight"
           >
-            Excelencia en tu <span className="text-slate-900 underline decoration-amber-500/60 decoration-4 underline-offset-8">Preparacion</span> Juridica
+            Prepárate para el <span className="text-slate-900 underline decoration-amber-500/60 decoration-4 underline-offset-8">concurso de la DIAN</span>
           </AnimatedDiv>
 
           <AnimatedDiv 
@@ -35,7 +35,7 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg text-slate-600 leading-relaxed max-w-xl"
           >
-            La plataforma de cuestionarios interactivos y simulacros definitiva para abogados y estudiantes que buscan superar sus examenes preparatorios con total exito. Rigor academico, metricas de rendimiento y tecnologia de vanguardia.
+            Más de 600 preguntas situacionales organizadas por eje temático, con el Código de Ética y el Diccionario de Competencias de la DIAN, simulacros configurables y métricas de desempeño. También incluye preparación en Derecho Penal y Privado.
           </AnimatedDiv>
 
           <AnimatedDiv 
@@ -48,14 +48,14 @@ export function HeroSection() {
               href="/register"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-8 py-4 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95"
             >
-              Crear Cuenta gratis
+              Crear cuenta gratis
               <ArrowRight className="w-5 h-5 text-amber-400" />
             </Link>
             <Link
               href="/login"
               className="w-full sm:w-auto inline-flex items-center justify-center border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-800 font-semibold px-8 py-4 rounded-lg shadow-sm transition-all active:scale-95"
             >
-              Iniciar Sesion
+              Iniciar sesión
             </Link>
           </AnimatedDiv>
         </div>
@@ -87,8 +87,8 @@ export function HeroSection() {
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tasa de Aprobacion</p>
-                <p className="font-serif text-3xl font-bold text-slate-900 mt-0.5">94%</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Banco de preguntas</p>
+                <p className="font-serif text-3xl font-bold text-slate-900 mt-0.5">600+</p>
               </div>
             </AnimatedDiv>
           </AnimatedDiv>
@@ -104,10 +104,10 @@ export function FeaturesSection() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 font-bold tracking-tight mb-4">
-            Herramientas Disenadas para el Exito
+            Herramientas diseñadas para el éxito
           </h2>
           <p className="text-slate-600 text-lg leading-relaxed">
-            Nuestra metodologia combina la doctrina legal tradicional con interfaces de aprendizaje modernas y libres de distracciones, maximizando la retencion y minimizando el estres.
+            Práctica con el formato de la prueba, retroalimentación en cada opción y seguimiento de tu avance por eje temático.
           </p>
         </div>
 
@@ -122,12 +122,12 @@ export function FeaturesSection() {
               </div>
               <h3 className="font-serif text-xl font-bold text-slate-900 mb-3">Simulacros Aleatorios</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Enfrenta examenes de preparatorios generados dinamicamente con preguntas que simulan la presion de tiempo, estructura y complejidad de las pruebas reales de la facultad.
+                Genera simulacros de 40, 80, 144 o el número de preguntas que prefieras, con temporizador, y limítalos a los ejes que quieres reforzar.
               </p>
             </div>
             <div className="pt-6 border-t border-slate-100 mt-6 flex justify-between items-center text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Modo Practica</span>
-              <span className="text-amber-600">Simulacion real</span>
+              <span>Tamaño configurable</span>
+              <span className="text-amber-600">Por eje temático</span>
             </div>
           </AnimatedDiv>
 
@@ -139,9 +139,9 @@ export function FeaturesSection() {
               <div className="w-12 h-12 bg-slate-900 text-amber-400 rounded-lg flex items-center justify-center mb-6 shadow-sm">
                 <LineChart className="w-6 h-6" />
               </div>
-              <h3 className="font-serif text-xl font-bold text-slate-900 mb-3">Seguimiento de Progreso</h3>
+              <h3 className="font-serif text-xl font-bold text-slate-900 mb-3">Seguimiento de progreso</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Visualiza tu evolucion a traves de metricas detalladas e historial completo. Identifica rapidamente tus areas debiles en la doctrina para enfocar tu tiempo de estudio eficazmente.
+                Consulta tu historial y el desempeño por tema para identificar rápidamente tus áreas débiles y enfocar tu tiempo de estudio.
               </p>
             </div>
             <div className="pt-6">
@@ -149,8 +149,8 @@ export function FeaturesSection() {
                 <div className="h-full bg-amber-500 rounded-full" style={{ width: '75%' }}></div>
               </div>
               <div className="flex justify-between items-center text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                <span>Meta de Aprobacion</span>
-                <span className="text-emerald-600">75% Completado</span>
+                <span>Tu avance</span>
+                <span className="text-emerald-600">Por eje</span>
               </div>
             </div>
           </AnimatedDiv>
@@ -163,16 +163,67 @@ export function FeaturesSection() {
               <div className="w-12 h-12 bg-slate-900 text-amber-400 rounded-lg flex items-center justify-center mb-6 shadow-sm">
                 <BookOpen className="w-6 h-6" />
               </div>
-              <h3 className="font-serif text-xl font-bold text-slate-900 mb-3">Contenido Juridico Actualizado</h3>
+              <h3 className="font-serif text-xl font-bold text-slate-900 mb-3">Contenido con explicaciones</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Accede a un pool de preguntas cuidadosamente elaboradas y revisadas por docentes y jurisprudencia actualizada al Codigo General del Proceso y Codigos de fondo vigentes.
+                Cada pregunta explica por qué la respuesta correcta lo es y por qué las demás opciones no, y el banco pasa por revisión de profesionales.
               </p>
             </div>
             <div className="pt-6 border-t border-slate-100 mt-6 flex justify-between items-center text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Ultima Actualizacion</span>
-              <span className="text-emerald-600">Al dia en 2026</span>
+              <span>Convocatoria</span>
+              <span className="text-emerald-600">DIAN 2676</span>
             </div>
           </AnimatedDiv>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const DIAN_AXES = [
+  'Código de Ética',
+  'Diccionario de Competencias',
+  'Gestión de recaudo',
+  'Cobro',
+  'Devoluciones',
+  'Régimen sancionatorio',
+];
+
+export function DianSection() {
+  return (
+    <section id="dian" className="py-20 bg-white border-b border-slate-200/60">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="lg:col-span-6 flex flex-col gap-5">
+          <span className="text-xs font-semibold uppercase tracking-wider text-amber-600">
+            Proceso de Selección DIAN 2676
+          </span>
+          <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 font-bold tracking-tight">
+            Gestor II · OPEC 236844
+          </h2>
+          <p className="text-slate-600 text-lg leading-relaxed">
+            El banco cubre los ejes funcionales del empleo, además de integridad y competencias comportamentales.
+            Practica por eje o combina varios en un mismo simulacro.
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-700">
+            {DIAN_AXES.map((axis) => (
+              <li key={axis} className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-amber-600 shrink-0" />
+                {axis}
+              </li>
+            ))}
+            <li className="flex items-center gap-2 text-slate-500">y más ejes funcionales…</li>
+          </ul>
+        </div>
+        <div className="lg:col-span-6 grid grid-cols-3 gap-4 text-center">
+          {[
+            { value: '14', label: 'Ejes temáticos' },
+            { value: '600+', label: 'Preguntas' },
+            { value: '3', label: 'Opciones por pregunta' },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+              <p className="font-serif text-3xl sm:text-4xl font-bold text-slate-900">{stat.value}</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-2">{stat.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

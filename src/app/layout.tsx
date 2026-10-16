@@ -25,8 +25,12 @@ export const metadata: Metadata = {
     template: '%s | Vantio',
   },
   description:
-    'Plataforma educativa para profesionales de leyes y contabilidad en Colombia. Simulacros aleatorios, seguimiento de progreso y métricas de rendimiento para exámenes preparatorios de Derecho Penal y Civil.',
+    'Simulacros y banco de preguntas para el Proceso de Selección DIAN 2676 (Gestor II, OPEC 236844), además de preparación en Derecho Penal y Privado. Seguimiento de progreso y métricas de rendimiento.',
   keywords: [
+    'concurso DIAN',
+    'DIAN 2676',
+    'Gestor II',
+    'OPEC 236844',
     'derecho',
     'quiz',
     'preparación',
@@ -52,7 +56,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Vantio - Plataforma de Preparación Jurídica',
     description:
-      'Plataforma educativa para profesionales de leyes y contabilidad en Colombia. Simulacros aleatorios, seguimiento de progreso y métricas de rendimiento.',
+      'Simulacros y banco de preguntas para el concurso DIAN 2676 (Gestor II) y exámenes de Derecho en Colombia.',
     url: 'https://vantio.xchecho.com',
     siteName: 'Vantio',
     locale: 'es_CO',
@@ -70,7 +74,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vantio - Plataforma de Preparación Jurídica',
     description:
-      'Plataforma educativa para profesionales de leyes y contabilidad en Colombia. Simulacros aleatorios, seguimiento de progreso y métricas de rendimiento.',
+      'Simulacros y banco de preguntas para el concurso DIAN 2676 (Gestor II) y exámenes de Derecho en Colombia.',
     images: ['/opengraph-image'],
   },
   robots: {
