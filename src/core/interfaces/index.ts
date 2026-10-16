@@ -25,6 +25,8 @@ export type {
 // Admin
 export type {
   AdminStats,
+  AdminAnalytics,
+  AnalyticsQuestionItem,
   AdminUser,
   AdminUserDetails,
   AdminUsersResponse,

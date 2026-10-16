@@ -1,6 +1,7 @@
 import { api } from '../api/fetch-client';
 import type {
   AdminStats,
+  AdminAnalytics,
   AdminUsersResponse,
   AdminSubject,
   AdminQuestionsResponse,
@@ -16,6 +17,10 @@ import type {
 
 export const getAdminStatsAction = async (days: number, token: string): Promise<AdminStats> => {
   return api.get<AdminStats>(`/admin/stats?days=${days}`, token);
+};
+
+export const getAdminAnalyticsAction = async (days: number, token: string): Promise<AdminAnalytics> => {
+  return api.get<AdminAnalytics>(`/admin/analytics?days=${days}`, token);
 };
 
 export const getAdminUsersAction = async (
