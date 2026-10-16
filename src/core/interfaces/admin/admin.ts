@@ -165,3 +165,36 @@ export interface AvailableArea {
 export interface MyEnrollments {
   enrolledAreas: string[];
 }
+
+export interface AnalyticsQuestionItem {
+  id: string;
+  externalId: string | null;
+  text: string;
+  subject: string;
+  attempts: number;
+  accuracy: number;
+}
+
+export interface AdminAnalytics {
+  days: number;
+  overview: {
+    totalUsers: number;
+    newUsers: number;
+    activeUsers: number;
+    testsCompleted: number;
+    averageScore: number;
+    passRate: number;
+    averageQuestionsPerTest: number;
+  };
+  daily: { date: string; tests: number; newUsers: number }[];
+  scoreDistribution: { range: string; tests: number }[];
+  bySubject: { subjectId: string; name: string; area: string; answered: number; accuracy: number }[];
+  hardestQuestions: AnalyticsQuestionItem[];
+  easiestQuestions: AnalyticsQuestionItem[];
+  reviews: {
+    activeLinks: number;
+    reviewedQuestions: number;
+    flaggedQuestions: number;
+    verdicts: { ok: number; fix: number; no: number };
+  };
+}
