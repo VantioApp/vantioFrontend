@@ -4,14 +4,14 @@ interface RequestOptions {
   method?: string;
   body?: unknown;
   token?: string | null;
+  timeoutMs?: number;
 }
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, token } = options;
+  const { method = 'GET', body, token, timeoutMs } = options;
 
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
+  const headers: HeadersInit = {};
+  if (body) headers['Content-Type'] = 'application/json';
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -22,6 +22,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     headers,
     body: body ? JSON.stringify(body) : undefined,
     credentials: 'include', // Enviar cookies automáticamente
+    signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
   });
 
   if (!response.ok) {
@@ -36,8 +37,8 @@ export const api = {
   get: <T>(endpoint: string, token?: string | null) =>
     request<T>(endpoint, { token }),
 
-  post: <T>(endpoint: string, body?: unknown, token?: string | null) =>
-    request<T>(endpoint, { method: 'POST', body, token }),
+  post: <T>(endpoint: string, body?: unknown, token?: string | null, timeoutMs?: number) =>
+    request<T>(endpoint, { method: 'POST', body, token, timeoutMs }),
 
   put: <T>(endpoint: string, body?: unknown, token?: string | null) =>
     request<T>(endpoint, { method: 'PUT', body, token }),

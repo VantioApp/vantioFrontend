@@ -12,7 +12,7 @@ const resourceTypeConfig: Record<string, { icon: React.ReactNode; label: string;
 };
 
 const PlanRefuerzo = React.memo(function PlanRefuerzo({ feedback }: { feedback: TestFeedback }) {
-  const { weakThemes, strongThemes, recommendation, studyResources } = feedback;
+  const { weakThemes, strongThemes, studyResources } = feedback;
 
   const groupedResources = studyResources.reduce<Record<string, StudyResource[]>>((acc, r) => {
     const key = r.themeName || r.subjectName;
@@ -23,31 +23,6 @@ const PlanRefuerzo = React.memo(function PlanRefuerzo({ feedback }: { feedback: 
 
   return (
     <div className="flex flex-col gap-6">
-      {recommendation && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8 shadow-xs">
-          <h3 className="font-serif text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-amber-600" />
-            Diagnóstico y Recomendaciones
-          </h3>
-          <div className="text-sm text-slate-700 leading-relaxed">
-            {recommendation.split('\n').map((line, idx) => {
-              if (line.trim() === '') {
-                return <br key={idx} />;
-              }
-              if (line.startsWith('•')) {
-                return (
-                  <div key={idx} className="flex items-start gap-2 ml-4 my-1">
-                    <span className="text-amber-600 mt-0.5">•</span>
-                    <span>{line.substring(1).trim()}</span>
-                  </div>
-                );
-              }
-              return <p key={idx} className="my-2">{line}</p>;
-            })}
-          </div>
-        </div>
-      )}
-
       {weakThemes.length > 0 && (
         <div className="bg-white rounded-xl border border-rose-200 p-6 md:p-8 shadow-xs">
           <h3 className="font-serif text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -59,15 +34,15 @@ const PlanRefuerzo = React.memo(function PlanRefuerzo({ feedback }: { feedback: 
               const resources = groupedResources[theme.name] || groupedResources[theme.subjectName] || [];
               return (
                 <div key={theme.themeId} className="border border-rose-100 rounded-lg p-4 bg-rose-50/30">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-sm text-slate-900">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <span className="font-semibold text-sm text-slate-900 min-w-0 wrap-break-word">
                       {theme.name}
                       <span className="text-xs font-normal text-slate-500 ml-2">({theme.subjectName})</span>
                     </span>
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                       theme.pct < 40 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
                     }`}>
-                      {theme.correct}/{theme.total} ({theme.pct}%)
+                      {theme.correct}/{theme.total} ({Math.round(theme.pct)}%)
                     </span>
                   </div>
                   {resources.length > 0 && (
@@ -81,7 +56,7 @@ const PlanRefuerzo = React.memo(function PlanRefuerzo({ feedback }: { feedback: 
                               {config.icon}
                               {config.label}
                             </span>
-                            <div className="flex flex-col">
+                            <div className="flex flex-col min-w-0 wrap-break-word">
                               <span className="text-slate-800 font-medium">{resource.title}</span>
                               {resource.citation && (
                                 <span className="text-slate-500 text-[11px]">{resource.citation}</span>
@@ -90,7 +65,7 @@ const PlanRefuerzo = React.memo(function PlanRefuerzo({ feedback }: { feedback: 
                                 <span className="text-slate-500 text-[11px]">{resource.description}</span>
                               )}
                               {resource.url && (
-                                <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 text-[11px] inline-flex items-center gap-1 mt-0.5">
+                                <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 cursor-pointer text-[11px] inline-flex items-center gap-1 mt-0.5">
                                   <Link2 className="w-3 h-3" />
                                   Abrir recurso
                                 </a>
@@ -122,7 +97,7 @@ const PlanRefuerzo = React.memo(function PlanRefuerzo({ feedback }: { feedback: 
               >
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
                 {theme.name}
-                <span className="text-emerald-600 font-bold">({theme.pct}%)</span>
+                <span className="text-emerald-600 font-bold">({Math.round(theme.pct)}%)</span>
               </span>
             ))}
           </div>

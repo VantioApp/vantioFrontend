@@ -1,139 +1,25 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { 
-  CheckCircle, AlertTriangle, Gavel, RefreshCw, 
-  ChevronRight, BookOpen, Award, Loader2, X
+import {
+  CheckCircle, AlertTriangle, RefreshCw,
+  ChevronRight, BookOpen, Award, Loader2
 } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
 import { FooterMinimal } from '@/presentation/components/ui/footer';
 import { useQuizStore } from '@/presentation/stores/quizStore';
+import { useAuthStore } from '@/presentation/stores/authStore';
 import { useProfile } from '@/presentation/hooks/use-profile';
+import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
 import { useQuizResults } from '@/presentation/hooks/use-quiz-results';
 import PlanRefuerzo from '@/presentation/components/quiz/PlanRefuerzo';
-import PerformancePolarChart from '@/presentation/components/quiz/PerformancePolarChart';
-import { CaseBlock, OptionExplanation, SourcesBlock } from '@/presentation/components/quiz/QuestionExtras';
-import type { TestResultQuestionRaw, TestResultsResponse } from '@/core/interfaces';
-
-const optionLetters = ['A', 'B', 'C', 'D'];
-
-const QuestionReviewCard = React.memo(function QuestionReviewCard({
-  question,
-  selectedAnswer,
-  isCorrect,
-  qIdx,
-}: {
-  question: TestResultQuestionRaw;
-  selectedAnswer: string | null;
-  isCorrect: boolean | null;
-  qIdx: number;
-}) {
-  const studentAnswerIdx = selectedAnswer
-    ? question.options.findIndex((o) => o.label === selectedAnswer)
-    : null;
-
-  return (
-    <div 
-      className={`bg-white rounded-xl border p-6 md:p-8 shadow-xs flex flex-col gap-4 relative overflow-hidden ${
-        isCorrect ? 'border-emerald-200' : 'border-rose-200'
-      }`}
-    >
-      <div className={`absolute top-0 left-0 w-1.5 h-full ${
-        isCorrect ? 'bg-emerald-500' : 'bg-rose-500'
-      }`} />
-
-      <div className="flex justify-between items-center gap-4 border-b border-slate-100 pb-3">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Pregunta {qIdx + 1}
-        </span>
-        <div className="flex items-center gap-2">
-          {question.themeName && (
-            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-              {question.themeName}
-            </span>
-          )}
-          <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
-            <Gavel className="w-3.5 h-3.5 text-amber-600" />
-            {question.subjectName}
-          </span>
-        </div>
-      </div>
-
-      <CaseBlock caseText={question.caseText} />
-
-      <h3 className="font-serif text-lg text-slate-900 font-bold leading-normal">
-        {question.text}
-      </h3>
-
-      <div className="flex flex-col gap-2 pt-2">
-        {question.options.map((option, oIdx) => {
-          const letter = optionLetters[oIdx];
-          const isCorrectOption = question.correctAnswer === option.label;
-          const isStudentChoice = oIdx === studentAnswerIdx;
-
-          let rowStyle = 'bg-slate-50 border-slate-200 text-slate-700';
-          let letterStyle = 'bg-slate-200 text-slate-600 border-slate-300';
-
-          if (isCorrectOption) {
-            rowStyle = 'bg-emerald-50/60 border-emerald-300 text-emerald-900 font-medium';
-            letterStyle = 'bg-emerald-500 text-white border-emerald-600';
-          } else if (isStudentChoice && !isCorrect) {
-            rowStyle = 'bg-rose-50/60 border-rose-200 text-rose-900';
-            letterStyle = 'bg-rose-500 text-white border-rose-600';
-          }
-
-          return (
-            <div key={oIdx} className={`rounded-lg p-3.5 flex items-start gap-3 border text-xs sm:text-sm ${rowStyle}`}>
-              <span className={`flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs border ${letterStyle}`}>
-                {letter}
-              </span>
-              <div className="pt-0.5 leading-normal min-w-0">
-                <span>{option.text}</span>
-                <OptionExplanation
-                  text={question.optionExplanations?.[option.label]}
-                  isCorrect={isCorrectOption}
-                />
-              </div>
-              
-              {isCorrectOption && (
-                <span className="ml-auto text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1">
-                  {isStudentChoice && (
-                    <CheckCircle className="w-3 h-3" />
-                  )}
-                  {isStudentChoice ? 'Tu Respuesta Correcta' : 'Respuesta Correcta'}
-                </span>
-              )}
-              {isStudentChoice && !isCorrectOption && (
-                <span className="ml-auto text-[10px] font-bold text-rose-700 uppercase tracking-wider bg-rose-100 px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1">
-                  <X className="w-3 h-3" />
-                  Tu Selección
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <SourcesBlock sources={question.sources} />
-
-      {question.explanation && !question.optionExplanations && (
-        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
-          <p className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
-            <BookOpen className="w-4 h-4 text-amber-600" />
-            Fundamento Jurídico
-          </p>
-          <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
-            {question.explanation}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-});
+import StudyReport from '@/presentation/components/quiz/StudyReport';
+import ThemePerformanceBars from '@/presentation/components/quiz/ThemePerformanceBars';
+import SubjectProgressChart from '@/presentation/components/quiz/SubjectProgressChart';
+import QuestionReviewCard from '@/presentation/components/quiz/QuestionReviewCard';
 
 export default function QuizResultsPage() {
   const router = useRouter();
@@ -141,20 +27,22 @@ export default function QuizResultsPage() {
   const testId = params.testId as string;
   const shouldReduce = useReducedMotion();
   const { data: user } = useProfile();
+  const isHydrated = useAuthHydration();
+  const hasToken = useAuthStore((s) => !!s.token);
   const resetQuiz = useQuizStore((s) => s.resetQuiz);
 
   const { data: resultsData, isLoading: isLoadingResults } = useQuizResults(testId);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
+    if (isHydrated && !hasToken && !user) {
+      router.replace('/login');
     }
-  }, [user, router]);
+  }, [isHydrated, hasToken, user, router]);
 
-  const totalQuestions = resultsData?.totalQuestions || 10;
-  const correctCount = resultsData?.correctCount || 0;
-  const scorePercent = resultsData?.score ?? (resultsData?.questions?.length ? Math.round((correctCount / totalQuestions) * 100) : 0);
-  const isPassed = resultsData?.passed ?? scorePercent >= 70;
+  const totalQuestions = resultsData?.totalQuestions ?? 0;
+  const correctCount = resultsData?.correctCount ?? 0;
+  const scorePercent = resultsData?.score ?? 0;
+  const isPassed = resultsData?.passed ?? scorePercent >= 60;
 
   const handleRetry = () => {
     resetQuiz();
@@ -172,26 +60,44 @@ export default function QuizResultsPage() {
     );
   }
 
+  if (!resultsData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-800 antialiased items-center justify-center px-6 text-center">
+        <AlertTriangle className="w-10 h-10 text-amber-500 mb-4" />
+        <p className="text-slate-700 text-sm font-semibold">No se pudieron cargar los resultados de la prueba.</p>
+        <Link
+          href="/dashboard"
+          className="mt-4 inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 text-sm font-semibold cursor-pointer"
+        >
+          Volver al Dashboard
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-800 antialiased justify-between">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center">
+          <Link href="/dashboard" className="flex items-center cursor-pointer">
             <Logo variant="full" theme="light" height={32} />
           </Link>
 
           <div className="bg-slate-900 text-white rounded-lg px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1 border border-slate-800 shadow-sm">
             <Award className="w-3.5 h-3.5 text-amber-400" />
-            <span>Resultado Oficial Guardado</span>
+            <span className="hidden sm:inline">Resultado Oficial Guardado</span>
+            <span className="sm:hidden">Guardado</span>
           </div>
         </div>
       </header>
 
-      <main className="flex-grow py-12 px-6 max-w-3xl w-full mx-auto flex flex-col gap-8">
+      <main className="flex-grow py-8 sm:py-12 px-4 sm:px-6 max-w-3xl w-full mx-auto flex flex-col gap-8">
+        {feedback && <StudyReport testId={testId} feedback={feedback} />}
+
         <motion.div 
           initial={shouldReduce ? false : { opacity: 0, scale: 0.98 }}
           animate={shouldReduce ? false : { opacity: 1, scale: 1 }}
-          className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm text-center flex flex-col items-center gap-4"
+          className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm text-center flex flex-col items-center gap-4"
         >
           {isPassed ? (
             <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full flex items-center justify-center shadow-xs">
@@ -216,15 +122,15 @@ export default function QuizResultsPage() {
             </p>
           </div>
 
-          <div className="my-4 flex items-center gap-6 bg-slate-50 border border-slate-200/60 p-4 rounded-xl w-full max-w-sm justify-around">
+          <div className="my-4 flex items-center gap-3 sm:gap-6 bg-slate-50 border border-slate-200/60 p-4 rounded-xl w-full max-w-sm justify-around">
             <div className="text-center">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aciertos</p>
-              <p className="text-3xl font-serif font-bold text-slate-900 mt-0.5">{correctCount} / {totalQuestions}</p>
+              <p className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 mt-0.5">{correctCount} / {totalQuestions}</p>
             </div>
             <div className="w-px h-10 bg-slate-200" />
             <div className="text-center">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Nota Porcentual</p>
-              <p className={`text-3xl font-serif font-bold mt-0.5 ${isPassed ? 'text-emerald-600' : 'text-rose-600'}`}>
+              <p className={`text-2xl sm:text-3xl font-serif font-bold mt-0.5 ${isPassed ? 'text-emerald-600' : 'text-rose-600'}`}>
                 {Math.round(scorePercent)}%
               </p>
             </div>
@@ -250,14 +156,15 @@ export default function QuizResultsPage() {
 
         {feedback ? (
           <>
+            <SubjectProgressChart testId={testId} />
+            <ThemePerformanceBars themeAnalysis={feedback.themeAnalysis} />
             <div>
               <h2 className="font-serif text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                 <BookOpen className="w-5.5 h-5.5 text-amber-600" />
-                Plan de Refuerzo Personalizado
+                Recursos de Refuerzo
               </h2>
               <PlanRefuerzo feedback={feedback} />
             </div>
-            <PerformancePolarChart themeAnalysis={feedback.themeAnalysis} />
           </>
         ) : null}
 
@@ -274,7 +181,7 @@ export default function QuizResultsPage() {
                   key={question.id || qIdx}
                   question={question}
                   selectedAnswer={question.selectedAnswer || null}
-                  isCorrect={question.isCorrect || null}
+                  isCorrect={question.isCorrect ?? null}
                   qIdx={qIdx}
                 />
               );

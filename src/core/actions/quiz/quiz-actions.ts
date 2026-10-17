@@ -6,6 +6,8 @@ import type {
   SubmitQuizResponse,
   TestResultsResponse,
   PaginatedHistory,
+  AiReportResponse,
+  SubjectProgress,
 } from '@/core/interfaces';
 
 export const generateQuizAction = async (
@@ -37,4 +39,12 @@ export const getQuizHistoryAction = async (
   if (params?.limit) queryParams.set('limit', params.limit.toString());
   const query = queryParams.toString();
   return api.get<PaginatedHistory>(`/quiz/history/${userId}${query ? `?${query}` : ''}`, token);
+};
+
+export const getSubjectProgressAction = async (testId: string, token: string): Promise<SubjectProgress> => {
+  return api.get<SubjectProgress>(`/quiz/${testId}/progress`, token);
+};
+
+export const generateAiReportAction = async (testId: string, token: string): Promise<AiReportResponse> => {
+  return api.post<AiReportResponse>(`/quiz/${testId}/ai-report`, undefined, token, 45_000);
 };

@@ -1,137 +1,21 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import {
-  CheckCircle, AlertTriangle, Gavel, ChevronLeft, BookOpen, Award, Loader2, X, ArrowLeft,
+  CheckCircle, AlertTriangle, ChevronLeft, BookOpen, Award, Loader2, ArrowLeft,
 } from 'lucide-react';
 import { useAuthStore } from '@/presentation/stores/authStore';
 import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
 import { useAdminTestResults } from '@/presentation/hooks/use-admin-test-results';
 import { useAdminUserDetails } from '@/presentation/hooks/use-admin-user-details';
 import PlanRefuerzo from '@/presentation/components/quiz/PlanRefuerzo';
-import PerformancePolarChart from '@/presentation/components/quiz/PerformancePolarChart';
-import { CaseBlock, OptionExplanation, SourcesBlock } from '@/presentation/components/quiz/QuestionExtras';
-import type { TestResultQuestionRaw, TestResultsResponse, AdminUserDetails } from '@/core/interfaces';
-
-const optionLetters = ['A', 'B', 'C', 'D'];
-
-const QuestionReviewCard = React.memo(function QuestionReviewCard({
-  question,
-  selectedAnswer,
-  isCorrect,
-  qIdx,
-}: {
-  question: TestResultQuestionRaw;
-  selectedAnswer: string | null;
-  isCorrect: boolean | null;
-  qIdx: number;
-}) {
-  const studentAnswerIdx = selectedAnswer
-    ? question.options.findIndex((o) => o.label === selectedAnswer)
-    : null;
-
-  return (
-    <div
-      className={`bg-white rounded-xl border p-6 md:p-8 shadow-xs flex flex-col gap-4 relative overflow-hidden ${
-        isCorrect ? 'border-emerald-200' : 'border-rose-200'
-      }`}
-    >
-      <div className={`absolute top-0 left-0 w-1.5 h-full ${
-        isCorrect ? 'bg-emerald-500' : 'bg-rose-500'
-      }`} />
-
-      <div className="flex justify-between items-center gap-4 border-b border-slate-100 pb-3">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Pregunta {qIdx + 1}
-        </span>
-        <div className="flex items-center gap-2">
-          {question.themeName && (
-            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-              {question.themeName}
-            </span>
-          )}
-          <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
-            <Gavel className="w-3.5 h-3.5 text-amber-600" />
-            {question.subjectName}
-          </span>
-        </div>
-      </div>
-
-      <CaseBlock caseText={question.caseText} />
-
-      <h3 className="font-serif text-lg text-slate-900 font-bold leading-normal">
-        {question.text}
-      </h3>
-
-      <div className="flex flex-col gap-2 pt-2">
-        {question.options.map((option, oIdx) => {
-          const letter = optionLetters[oIdx];
-          const isCorrectOption = question.correctAnswer === option.label;
-          const isStudentChoice = oIdx === studentAnswerIdx;
-
-          let rowStyle = 'bg-slate-50 border-slate-200 text-slate-700';
-          let letterStyle = 'bg-slate-200 text-slate-600 border-slate-300';
-
-          if (isCorrectOption) {
-            rowStyle = 'bg-emerald-50/60 border-emerald-300 text-emerald-900 font-medium';
-            letterStyle = 'bg-emerald-500 text-white border-emerald-600';
-          } else if (isStudentChoice && !isCorrect) {
-            rowStyle = 'bg-rose-50/60 border-rose-200 text-rose-900';
-            letterStyle = 'bg-rose-500 text-white border-rose-600';
-          }
-
-          return (
-            <div key={oIdx} className={`rounded-lg p-3.5 flex items-start gap-3 border text-xs sm:text-sm ${rowStyle}`}>
-              <span className={`flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs border ${letterStyle}`}>
-                {letter}
-              </span>
-              <div className="pt-0.5 leading-normal min-w-0">
-                <span>{option.text}</span>
-                <OptionExplanation
-                  text={question.optionExplanations?.[option.label]}
-                  isCorrect={isCorrectOption}
-                />
-              </div>
-
-              {isCorrectOption && (
-                <span className="ml-auto text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1">
-                  {isStudentChoice && (
-                    <CheckCircle className="w-3 h-3" />
-                  )}
-                  {isStudentChoice ? 'Respuesta Correcta' : 'Respuesta Correcta'}
-                </span>
-              )}
-              {isStudentChoice && !isCorrectOption && (
-                <span className="ml-auto text-[10px] font-bold text-rose-700 uppercase tracking-wider bg-rose-100 px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1">
-                  <X className="w-3 h-3" />
-                  Su Selección
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <SourcesBlock sources={question.sources} />
-
-      {question.explanation && !question.optionExplanations && (
-        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
-          <p className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
-            <BookOpen className="w-4 h-4 text-amber-600" />
-            Fundamento Jurídico
-          </p>
-          <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
-            {question.explanation}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-});
+import StudyReport from '@/presentation/components/quiz/StudyReport';
+import ThemePerformanceBars from '@/presentation/components/quiz/ThemePerformanceBars';
+import QuestionReviewCard from '@/presentation/components/quiz/QuestionReviewCard';
+import type { TestResultsResponse, AdminUserDetails } from '@/core/interfaces';
 
 interface ExamReviewClientProps {
   userId: string;
@@ -147,8 +31,6 @@ export default function ExamReviewClient({
   initialUser,
 }: ExamReviewClientProps) {
   const router = useRouter();
-  const params = useParams();
-  void params;
   const shouldReduce = useReducedMotion();
   const user = useAuthStore((s) => s.user);
   const isHydrated = useAuthHydration();
@@ -184,7 +66,7 @@ export default function ExamReviewClient({
         <p className="text-slate-700 text-sm font-semibold">No se pudieron cargar los resultados del examen.</p>
         <Link
           href={`/admin/users/${userId}`}
-          className="mt-4 inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 text-sm font-semibold"
+          className="mt-4 inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 text-sm font-semibold cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver al detalle del usuario
@@ -205,6 +87,7 @@ export default function ExamReviewClient({
     <>
       <div className="flex items-center gap-4">
         <button
+          aria-label="Volver al detalle del usuario"
           onClick={() => router.push(`/admin/users/${userId}`)}
           className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
         >
@@ -221,6 +104,8 @@ export default function ExamReviewClient({
           )}
         </div>
       </div>
+
+      {feedback?.aiReport && <StudyReport testId={testId} feedback={feedback} canGenerate={false} />}
 
       <motion.div
         initial={shouldReduce ? false : { opacity: 0, scale: 0.98 }}
@@ -287,7 +172,7 @@ export default function ExamReviewClient({
             </h2>
             <PlanRefuerzo feedback={feedback} />
           </div>
-          <PerformancePolarChart themeAnalysis={feedback.themeAnalysis} />
+          <ThemePerformanceBars themeAnalysis={feedback.themeAnalysis} />
         </>
       ) : null}
 
@@ -304,7 +189,8 @@ export default function ExamReviewClient({
                 key={question.id || qIdx}
                 question={question}
                 selectedAnswer={question.selectedAnswer || null}
-                isCorrect={question.isCorrect || null}
+                isCorrect={question.isCorrect ?? null}
+                audience="admin"
                 qIdx={qIdx}
               />
             );
