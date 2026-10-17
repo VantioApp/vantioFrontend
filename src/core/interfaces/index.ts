@@ -20,6 +20,11 @@ export type {
   ClassifiedTheme,
   StudyResource,
   TestFeedback,
+  AiReport,
+  AiReportPriority,
+  AiReportResponse,
+  ProgressAttempt,
+  SubjectProgress,
 } from './quiz/quiz';
 
 // Admin

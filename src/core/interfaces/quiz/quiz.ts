@@ -142,8 +142,40 @@ export interface TestFeedback {
   weakThemes: ClassifiedTheme[];
   strongThemes: ClassifiedTheme[];
   recommendation: string | null;
+  aiReport?: AiReport | null;
   studyResources: StudyResource[];
   createdAt: string;
+}
+
+export interface AiReportPriority {
+  theme: string;
+  why: string;
+  whatToStudy: string[];
+  suggestedSources: string[];
+}
+
+export interface AiReport {
+  greeting: string;
+  summary: string;
+  priorities: AiReportPriority[];
+  strengths: string[];
+  nextStep: string;
+}
+
+export type AiReportResponse =
+  | { status: 'READY'; report: AiReport }
+  | { status: 'FAILED'; report: null };
+
+export interface ProgressAttempt {
+  testId: string;
+  score: number;
+  passed: boolean;
+  finishedAt: string;
+}
+
+export interface SubjectProgress {
+  subjectName: string;
+  attempts: ProgressAttempt[];
 }
 
 export interface TestResultsResponse {
