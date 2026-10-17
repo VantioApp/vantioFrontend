@@ -69,16 +69,15 @@ export default function QuizPage() {
 
     const interval = setInterval(() => {
       tickTimer();
+      // tickTimer desactiva el quiz al llegar a 0; el envío automático se dispara aquí.
+      if (useQuizStore.getState().timeLeft <= 0) {
+        clearInterval(interval);
+        handleFinishQuiz();
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, isFinished, tickTimer]);
-
-  useEffect(() => {
-    if (timeLeft <= 0 && isActive) {
-      handleFinishQuiz();
-    }
-  }, [timeLeft, isActive, handleFinishQuiz]);
+  }, [isActive, isFinished, tickTimer, handleFinishQuiz]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
