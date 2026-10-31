@@ -6,6 +6,7 @@ export type {
   QuestionOption,
   Question,
   QuizAnswer,
+  QuizMode,
   QuizState,
   TestHistoryItem,
   PaginatedHistory,
@@ -26,6 +27,9 @@ export type {
   ProgressAttempt,
   SubjectProgress,
 } from './quiz/quiz';
+
+// Norms
+export type { NormSummary, NormArticle, NormArticlesPage } from './norms/norms';
 
 // Admin
 export type {

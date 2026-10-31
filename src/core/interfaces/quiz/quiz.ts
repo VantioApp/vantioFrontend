@@ -10,6 +10,8 @@ export interface Question {
   testQuestionId: string;
   order: number;
   caseText?: string | null;
+  /** Preguntas de una misma situación comparten este id (simulacro de idoneidad). */
+  caseGroupId?: string | null;
   statement: string;
   options: QuestionOption[];
   correctAnswer?: string;
@@ -30,8 +32,15 @@ export interface QuizAnswer {
   isCorrect?: boolean | null;
 }
 
+export type QuizMode = 'practice' | 'idoneidad_simulacro';
+
 export interface QuizState {
   testId: string | null;
+  mode: QuizMode;
+  /** Epoch ms en que vence el simulacro; null en modo práctica. */
+  deadlineAt: number | null;
+  /** ids de pregunta marcadas para revisar (simulacro). */
+  flagged: string[];
   questions: Question[];
   currentQuestionIndex: number;
   selectedOptionIndex: number | null;
@@ -71,6 +80,8 @@ export interface GenerateQuizResponse {
   testId: string;
   totalQuestions: number;
   questions: Question[];
+  mode?: QuizMode;
+  timeLimitSeconds?: number | null;
 }
 
 export interface QuizAnswerItem {
@@ -128,7 +139,7 @@ export interface ClassifiedTheme {
 export interface StudyResource {
   id: string;
   title: string;
-  type: 'doctrina' | 'jurisprudencia' | 'ley' | 'articulo';
+  type: 'doctrina' | 'jurisprudencia' | 'ley' | 'articulo' | 'video';
   citation: string | null;
   description: string | null;
   url: string | null;
@@ -184,6 +195,10 @@ export interface TestResultsResponse {
   correctCount: number;
   score: number;
   passed: boolean;
+  mode?: QuizMode;
+  /** Posición frente a la cohorte de Vantio; null si la cohorte es pequeña. */
+  percentile?: number | null;
+  timeLimitSeconds?: number | null;
   startedAt: string;
   finishedAt: string;
   questions: TestResultQuestionRaw[];

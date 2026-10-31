@@ -17,6 +17,12 @@ export const generateQuizAction = async (
   return api.post<GenerateQuizResponse>('/quiz/generate', data, token);
 };
 
+export const generateIdoneidadSimulacroAction = async (
+  token: string
+): Promise<GenerateQuizResponse> => {
+  return api.post<GenerateQuizResponse>('/quiz/idoneidad/simulacro', undefined, token);
+};
+
 export const submitQuizAction = async (
   testId: string,
   answers: SubmitQuizRequest['answers'],

@@ -7,9 +7,12 @@ import { useAvailableAreas } from '@/presentation/hooks/use-available-areas';
 import { useMyEnrollments } from '@/presentation/hooks/use-my-enrollments';
 import { useEnrollArea } from '@/presentation/hooks/use-enroll-area';
 import { useUnenrollArea } from '@/presentation/hooks/use-unenroll-area';
-import { useGenerateQuiz } from '@/presentation/hooks/use-quiz';
+import { useGenerateIdoneidadSimulacro, useGenerateQuiz } from '@/presentation/hooks/use-quiz';
 import { useQuizStore } from '@/presentation/stores/quizStore';
+import StartIdoneidadDialog from '@/presentation/components/quiz/StartIdoneidadDialog';
 import StartQuizDialog, { type StartQuizOptions } from '@/presentation/components/quiz/StartQuizDialog';
+
+const IDONEIDAD_AREA = 'Idoneidad';
 
 export default function CoursesClient() {
   const router = useRouter();
@@ -18,10 +21,26 @@ export default function CoursesClient() {
   const { mutate: enrollArea, isPending: isEnrolling } = useEnrollArea();
   const { mutate: unenrollArea, isPending: isUnenrolling } = useUnenrollArea();
   const { mutate: generateQuiz, isPending: isGenerating } = useGenerateQuiz();
+  const {
+    mutate: generateSimulacro,
+    isPending: isGeneratingSimulacro,
+    error: simulacroError,
+    reset: resetSimulacro,
+  } = useGenerateIdoneidadSimulacro();
 
   const enrolledAreas = myEnrollments?.enrolledAreas ?? [];
 
   const [configuringArea, setConfiguringArea] = useState<string | null>(null);
+  const [practiceArea, setPracticeArea] = useState<string | null>(null);
+
+  const handleStartSimulacro = () => {
+    generateSimulacro(undefined, {
+      onSuccess: () => {
+        const { testId } = useQuizStore.getState();
+        if (testId) router.push(`/quiz/${testId}`);
+      },
+    });
+  };
 
   const handleStartQuiz = (area: string, options: StartQuizOptions) => {
     generateQuiz({ area, ...options }, {
@@ -151,13 +170,33 @@ export default function CoursesClient() {
         </div>
       )}
 
+      {configuringArea === IDONEIDAD_AREA && (
+        <StartIdoneidadDialog
+          isPending={isGeneratingSimulacro}
+          error={simulacroError ? simulacroError.message : null}
+          onStartSimulacro={handleStartSimulacro}
+          onPractice={() => {
+            setPracticeArea(IDONEIDAD_AREA);
+            setConfiguringArea(null);
+          }}
+          onClose={() => {
+            resetSimulacro();
+            setConfiguringArea(null);
+          }}
+        />
+      )}
+
       {(() => {
-        const area = availableAreas.find((a) => a.area === configuringArea);
+        const target = practiceArea ?? (configuringArea === IDONEIDAD_AREA ? null : configuringArea);
+        const area = availableAreas.find((a) => a.area === target);
         return area ? (
           <StartQuizDialog
             area={area}
             isPending={isGenerating}
-            onClose={() => setConfiguringArea(null)}
+            onClose={() => {
+              setConfiguringArea(null);
+              setPracticeArea(null);
+            }}
             onStart={(options) => handleStartQuiz(area.area, options)}
           />
         ) : null;

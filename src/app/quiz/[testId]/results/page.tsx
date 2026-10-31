@@ -42,7 +42,11 @@ export default function QuizResultsPage() {
   const totalQuestions = resultsData?.totalQuestions ?? 0;
   const correctCount = resultsData?.correctCount ?? 0;
   const scorePercent = resultsData?.score ?? 0;
+  const isSimulacro = resultsData?.mode === 'idoneidad_simulacro';
+  const percentile = resultsData?.percentile ?? null;
   const isPassed = resultsData?.passed ?? scorePercent >= 60;
+  // El simulacro de idoneidad se aprueba frente a la media nacional: sin veredicto fijo.
+  const showVerdict = !isSimulacro;
 
   const handleRetry = () => {
     resetQuiz();
@@ -99,7 +103,11 @@ export default function QuizResultsPage() {
           animate={shouldReduce ? false : { opacity: 1, scale: 1 }}
           className="bg-white rounded-xl border border-slate-200 p-5 sm:p-8 shadow-sm text-center flex flex-col items-center gap-4"
         >
-          {isPassed ? (
+          {!showVerdict ? (
+            <div className="w-16 h-16 bg-slate-50 border border-slate-200 text-slate-600 rounded-full flex items-center justify-center shadow-xs">
+              <Award className="w-10 h-10" />
+            </div>
+          ) : isPassed ? (
             <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full flex items-center justify-center shadow-xs">
               <CheckCircle className="w-10 h-10" />
             </div>
@@ -112,28 +120,41 @@ export default function QuizResultsPage() {
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Diagnóstico de Desempeño</span>
             <h1 className="font-serif text-3xl font-bold text-slate-900 mt-1">
-              {isPassed ? '¡Prueba Aprobada!' : 'Requiere Refuerzo Doctrinal'}
+              {!showVerdict ? 'Simulacro de Idoneidad' : isPassed ? '¡Prueba Aprobada!' : 'Requiere Refuerzo Doctrinal'}
             </h1>
             <p className="text-slate-500 text-sm mt-1 max-w-md mx-auto">
-              {isPassed 
+              {!showVerdict
+                ? 'En el examen oficial se aprueba al superar la media nacional, por lo que aquí no hay un umbral fijo. Usa el percentil y el desglose por competencia como referencia.'
+                : isPassed 
                 ? 'Excelente nivel. Cuentas con fundamentos sólidos para enfrentar tu examen preparatorio con confianza.' 
                 : 'Revisa el plan de refuerzo y los recursos sugeridos para fortalecer los temas donde fallaste.'
               }
             </p>
           </div>
 
-          <div className="my-4 flex items-center gap-3 sm:gap-6 bg-slate-50 border border-slate-200/60 p-4 rounded-xl w-full max-w-sm justify-around">
+          <div className={`my-4 flex items-center gap-3 sm:gap-6 bg-slate-50 border border-slate-200/60 p-4 rounded-xl w-full justify-around ${isSimulacro ? 'max-w-lg' : 'max-w-sm'}`}>
             <div className="text-center">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aciertos</p>
-              <p className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 mt-0.5">{correctCount} / {totalQuestions}</p>
+              <p className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 mt-0.5 whitespace-nowrap">{correctCount} / {totalQuestions}</p>
             </div>
             <div className="w-px h-10 bg-slate-200" />
             <div className="text-center">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Nota Porcentual</p>
-              <p className={`text-2xl sm:text-3xl font-serif font-bold mt-0.5 ${isPassed ? 'text-emerald-600' : 'text-rose-600'}`}>
+              <p className={`text-2xl sm:text-3xl font-serif font-bold mt-0.5 ${!showVerdict ? 'text-slate-900' : isPassed ? 'text-emerald-600' : 'text-rose-600'}`}>
                 {Math.round(scorePercent)}%
               </p>
             </div>
+            {isSimulacro && (
+              <>
+                <div className="w-px h-10 bg-slate-200" />
+                <div className="text-center">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Percentil Vantio</p>
+                  <p className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 mt-0.5">
+                    {percentile !== null ? Math.round(percentile) : '—'}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
