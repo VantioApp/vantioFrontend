@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
-  LayoutDashboard, GraduationCap, History, UserCircle, LogOut,
+  LayoutDashboard, GraduationCap, History, UserCircle, LogOut, BookOpenText,
 } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
 import { MobileNavDrawer } from '@/presentation/components/ui/MobileNavDrawer';
@@ -14,6 +14,7 @@ import { useAuthHydration } from '@/presentation/hooks/use-auth-hydration';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/courses', label: 'Mis Cursos', icon: GraduationCap },
+  { href: '/dashboard/norms', label: 'Quiosco Normativo', icon: BookOpenText },
   { href: '/dashboard/history', label: 'Historial', icon: History },
   { href: '/dashboard/profile', label: 'Perfil', icon: UserCircle },
 ];

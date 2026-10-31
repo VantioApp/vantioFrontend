@@ -2,17 +2,20 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Timer, X, ArrowRight, Gavel, Loader2 } from 'lucide-react';
+import { Timer, X, ArrowRight, ArrowLeft, Gavel, Loader2, Flag, BookOpenText } from 'lucide-react';
 import { Logo } from '@/presentation/components/ui/logo';
 import { useQuizStore } from '@/presentation/stores/quizStore';
 import { useSubmitQuiz } from '@/presentation/hooks/use-quiz';
 import { formatTime } from '@/core/utils/format-time';
 import { CaseBlock } from '@/presentation/components/quiz/QuestionExtras';
+import QuestionNavigator from '@/presentation/components/quiz/QuestionNavigator';
+import NormKiosk from '@/presentation/components/quiz/NormKiosk';
 
 export default function QuizPage() {
   const router = useRouter();
   const { mutate: submitQuiz, isPending: isSubmitting } = useSubmitQuiz();
   const [isFinishing, setIsFinishing] = useState(false);
+  const [kioskOpen, setKioskOpen] = useState(false);
   const questions = useQuizStore((s) => s.questions);
   const currentQuestionIndex = useQuizStore((s) => s.currentQuestionIndex);
   const selectedOptionIndex = useQuizStore((s) => s.selectedOptionIndex);
@@ -22,6 +25,12 @@ export default function QuizPage() {
   const selectOption = useQuizStore((s) => s.selectOption);
   const nextQuestion = useQuizStore((s) => s.nextQuestion);
   const tickTimer = useQuizStore((s) => s.tickTimer);
+  const mode = useQuizStore((s) => s.mode);
+  const answers = useQuizStore((s) => s.answers);
+  const flagged = useQuizStore((s) => s.flagged);
+  const goToQuestion = useQuizStore((s) => s.goToQuestion);
+  const toggleFlag = useQuizStore((s) => s.toggleFlag);
+  const isSimulacro = mode === 'idoneidad_simulacro';
 
   const handleFinishQuiz = useCallback(() => {
     const { testId: currentTestId, answers: currentAnswers } = useQuizStore.getState();
@@ -45,6 +54,7 @@ export default function QuizPage() {
     submitQuiz({ testId: currentTestId, answers: submitAnswers }, {
       onSuccess: (data) => {
         console.log('[Quiz] Submit success', data);
+        useQuizStore.getState().markSubmitted();
         router.push(`/quiz/${currentTestId}/results`);
       },
       onError: (error) => {
@@ -63,6 +73,15 @@ export default function QuizPage() {
       }, 0);
     }
   }, [currentQuestionIndex, questions.length, nextQuestion, handleFinishQuiz]);
+
+  // El simulacro sobrevive a recargas: se recupera de sessionStorage al montar.
+  useEffect(() => {
+    if (useQuizStore.getState().questions.length === 0) {
+      void Promise.resolve(useQuizStore.persist.rehydrate()).then(() => {
+        useQuizStore.getState().tickTimer();
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!isActive || isFinished) return;
@@ -98,7 +117,9 @@ export default function QuizPage() {
   }
 
   const currentQuestion = questions[currentQuestionIndex];
-  const progressPercent = Math.round(((currentQuestionIndex + 1) / questions.length) * 100);
+  const progressPercent = isSimulacro
+    ? Math.round((answers.length / questions.length) * 100)
+    : Math.round(((currentQuestionIndex + 1) / questions.length) * 100);
   const isTimeCritical = timeLeft <= 300;
   const optionLetters = ['A', 'B', 'C', 'D'];
 
@@ -109,6 +130,15 @@ export default function QuizPage() {
   };
 
   const isProcessing = isSubmitting || isFinishing;
+
+  const handleSubmitSimulacro = () => {
+    const unanswered = questions.length - answers.length;
+    const message =
+      unanswered > 0
+        ? `Tienes ${unanswered} pregunta${unanswered === 1 ? '' : 's'} sin responder. ¿Entregar el simulacro de todas formas?`
+        : '¿Entregar el simulacro? No podrás modificar tus respuestas.';
+    if (window.confirm(message)) handleFinishQuiz();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-slate-800 antialiased justify-between">
@@ -125,10 +155,21 @@ export default function QuizPage() {
             <Logo variant="isotype" theme="light" height={28} />
             <span className="font-serif text-lg font-bold text-slate-900 tracking-tight">Vantio</span>
             <span className="hidden md:inline-block text-xs font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              Simulacro Preparatorio
+              {isSimulacro ? 'Simulacro Idoneidad' : 'Simulacro Preparatorio'}
             </span>
           </div>
 
+          <div className="flex items-center gap-3">
+          {isSimulacro && (
+            <button
+              type="button"
+              onClick={() => setKioskOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
+            >
+              <BookOpenText className="w-4 h-4 text-amber-600" />
+              <span className="hidden sm:inline">Quiosco Normativo</span>
+            </button>
+          )}
           <div 
             className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${
               isTimeCritical ? 'bg-rose-50 border-rose-200 text-rose-600 animate-pulse' : 'bg-slate-50 border-slate-200 text-slate-700'
@@ -136,6 +177,7 @@ export default function QuizPage() {
           >
             <Timer className={`w-4 h-4 ${isTimeCritical ? 'text-rose-500' : 'text-amber-600'}`} />
             <span className="font-mono text-sm font-bold tabular-nums">{formatTime(timeLeft)}</span>
+          </div>
           </div>
         </div>
       </header>
@@ -187,6 +229,69 @@ export default function QuizPage() {
           </div>
         </div>
 
+        {isSimulacro ? (
+          <>
+            <div className="flex flex-wrap justify-between items-center gap-3 w-full mb-6">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => goToQuestion(currentQuestionIndex - 1)}
+                  disabled={currentQuestionIndex === 0 || isProcessing}
+                  className="inline-flex items-center gap-1.5 px-4 py-3 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Anterior
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleFlag}
+                  aria-pressed={flagged.includes(currentQuestion.id)}
+                  className={`inline-flex items-center gap-1.5 px-4 py-3 rounded-lg border text-xs font-bold cursor-pointer ${
+                    flagged.includes(currentQuestion.id)
+                      ? 'border-amber-300 bg-amber-50 text-amber-800'
+                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Flag className="w-4 h-4 text-amber-600" />
+                  {flagged.includes(currentQuestion.id) ? 'Marcada' : 'Marcar'}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => goToQuestion(currentQuestionIndex + 1)}
+                disabled={currentQuestionIndex + 1 >= questions.length || isProcessing}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Siguiente
+                <ArrowRight className="w-4 h-4 text-amber-600" />
+              </button>
+            </div>
+
+            <QuestionNavigator
+              questions={questions}
+              answers={answers}
+              flagged={flagged}
+              currentIndex={currentQuestionIndex}
+              onSelect={goToQuestion}
+            />
+
+            <button
+              type="button"
+              onClick={handleSubmitSimulacro}
+              disabled={isProcessing}
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold border border-slate-950 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Enviando respuestas...
+                </>
+              ) : (
+                'Entregar simulacro'
+              )}
+            </button>
+          </>
+        ) : (
         <div className="flex justify-between items-center gap-4 w-full">
           <button
             onClick={handleCancelQuiz}
@@ -219,7 +324,10 @@ export default function QuizPage() {
             )}
           </button>
         </div>
+        )}
       </main>
+
+      {kioskOpen && <NormKiosk onClose={() => setKioskOpen(false)} />}
 
       <footer className="bg-slate-100 py-4 text-center border-t border-slate-200 shrink-0">
         <div className="max-w-3xl mx-auto px-6 flex justify-between items-center text-[10px] font-semibold text-slate-400 uppercase tracking-widest">

@@ -1,5 +1,10 @@
 export function formatTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  const ss = secs < 10 ? `0${secs}` : `${secs}`;
+  if (hours > 0) {
+    return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${ss}`;
+  }
+  return `${minutes}:${ss}`;
 }

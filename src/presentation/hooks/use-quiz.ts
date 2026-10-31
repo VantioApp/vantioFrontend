@@ -1,5 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { generateQuizAction, submitQuizAction } from '@/core/actions/quiz/quiz-actions';
+import {
+  generateIdoneidadSimulacroAction,
+  generateQuizAction,
+  submitQuizAction,
+} from '@/core/actions/quiz/quiz-actions';
 import { useAuthStore } from '@/presentation/stores/authStore';
 import { useQuizStore } from '@/presentation/stores/quizStore';
 import type { GenerateQuizResponse } from '@/core/interfaces/quiz/quiz';
@@ -20,6 +24,21 @@ export function useGenerateQuiz() {
     },
     onSuccess: (data: GenerateQuizResponse) => {
       useQuizStore.getState().setQuiz(data.testId, data.questions);
+    },
+  });
+}
+
+export function useGenerateIdoneidadSimulacro() {
+  return useMutation({
+    mutationFn: () => {
+      const token = useAuthStore.getState().token;
+      return generateIdoneidadSimulacroAction(token!);
+    },
+    onSuccess: (data: GenerateQuizResponse) => {
+      useQuizStore.getState().setQuiz(data.testId, data.questions, {
+        mode: 'idoneidad_simulacro',
+        timeLimitSeconds: data.timeLimitSeconds ?? undefined,
+      });
     },
   });
 }
